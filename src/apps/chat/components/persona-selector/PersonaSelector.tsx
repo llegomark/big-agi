@@ -3,10 +3,9 @@ import { shallow } from 'zustand/shallow';
 
 import { Box, Button, Checkbox, Grid, IconButton, Input, Stack, Textarea, Typography } from '@mui/joy';
 import ClearIcon from '@mui/icons-material/Clear';
-import ScienceIcon from '@mui/icons-material/Science';
 import SearchIcon from '@mui/icons-material/Search';
 import TelegramIcon from '@mui/icons-material/Telegram';
-
+import YouTubeIcon from '@mui/icons-material/YouTube';
 import { Link } from '~/common/components/Link';
 import { useChatStore } from '~/common/state/store-chats';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
@@ -200,9 +199,9 @@ export function PersonaSelector(props: { conversationId: string; runExample: (ex
                 }}
               >
                 <div>
-                  <ScienceIcon />
+                  <YouTubeIcon sx={{ color: '#f00' }} />
                 </div>
-                <div>YouTube persona creator</div>
+                <div>YouTube</div>
               </Button>
             </Grid>
           </Grid>

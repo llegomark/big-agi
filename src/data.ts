@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export type SystemPurposeId = 'Catalyst' | 'Custom' | 'Designer' | 'Developer' | 'Executive' | 'Generic' | 'Scientist';
+export type SystemPurposeId = 'Catalyst' | 'Custom' | 'Designer' | 'Developer' | 'Executive' | 'Generic' | 'Scientist' | 'Claude';
 
 export const defaultSystemPurposeId: SystemPurposeId = 'Generic';
 
@@ -81,19 +81,30 @@ export const SystemPurposes: { [key in SystemPurposeId]: SystemPurposeData } = {
     voices: { elevenLabs: { voiceId: 'MF3mGyEYCl7XYWbV9V6O' } },
   },
   Generic: {
-    title: 'Default',
-    description: 'Helps you think',
+    title: 'ChatGPT',
+    description: 'ChatGPT by OpenAI',
     systemMessage:
-      'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.\nKnowledge cutoff: 2021-09\nCurrent date: {{Today}}',
+      'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.\nCarefully heed the users instructions.\nRespond using Markdown Syntax.\nCurrent Date: {{Today}}',
     symbol: '🧠',
-    examples: ['help me plan a trip to Japan', 'what is the meaning of life?', 'how do I get a job at OpenAI?', 'what are some healthy meal ideas?'],
+    examples: ['what is the meaning of life?', 'what is the best way to learn a new programming language?', 'how do I get a job at OpenAI?'],
+    call: { starters: ['Hey, how can I assist?', 'AI assistant ready. What do you need?', 'Ready to assist.', 'Hello.'] },
+    voices: { elevenLabs: { voiceId: 'z9fAnlkpzviPz146aGWa' } },
+  },
+  Claude: {
+    title: 'Claude',
+    description: 'Claude by Anthropic',
+    systemMessage:
+      'You are Claude, a large language model trained by Anthropic to be helpful, harmless, and honest.\nCarefully heed the users instructions.\nRespond using Markdown Syntax.\nCurrent Date: {{Today}}',
+    symbol: '💡',
+    examples: ['Can you recommend a good book/movie/song?', 'how do I get a job at Anthropic?'],
     call: { starters: ['Hey, how can I assist?', 'AI assistant ready. What do you need?', 'Ready to assist.', 'Hello.'] },
     voices: { elevenLabs: { voiceId: 'z9fAnlkpzviPz146aGWa' } },
   },
   Custom: {
     title: 'Custom',
     description: 'User-defined purpose',
-    systemMessage: 'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-4 architecture.\nCurrent date: {{Today}}',
+    systemMessage:
+      'You are Claude, a large language model trained by Anthropic to be helpful, harmless, and honest.\nCarefully heed the users instructions.\nRespond using Markdown Syntax.\nCurrent Date: {{Today}}',
     symbol: '✨',
     call: { starters: ["What's the task?", 'What can I do?', 'Ready for your task.', 'Yes?'] },
     voices: { elevenLabs: { voiceId: 'flq6f7yk4E4fJM5XTYuZ' } },
