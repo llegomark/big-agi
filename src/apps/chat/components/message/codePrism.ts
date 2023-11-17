@@ -16,11 +16,22 @@ import 'prismjs/components/prism-typescript';
 const hPrismLanguages = ['bash', 'css', 'java', 'javascript', 'json', 'markdown', 'mermaid', 'plant-uml', 'python', 'typescript'];
 
 const hFileExtensionsMap: { [key: string]: string } = {
-  cs: 'csharp', html: 'html', java: 'java', js: 'javascript', json: 'json', jsx: 'javascript',
-  md: 'markdown', mmd: 'mermaid', py: 'python', sh: 'bash', ts: 'typescript', tsx: 'typescript', xml: 'xml',
+  cs: 'csharp',
+  html: 'html',
+  java: 'java',
+  js: 'javascript',
+  json: 'json',
+  jsx: 'javascript',
+  md: 'markdown',
+  mmd: 'mermaid',
+  py: 'python',
+  sh: 'bash',
+  ts: 'typescript',
+  tsx: 'typescript',
+  xml: 'xml',
 };
 
-const hCodeIncipitMap: { starts: string[], language: string }[] = [
+const hCodeIncipitMap: { starts: string[]; language: string }[] = [
   { starts: ['<!DOCTYPE html', '<html'], language: 'html' },
   { starts: ['<'], language: 'xml' },
   { starts: ['from '], language: 'python' },
@@ -31,25 +42,19 @@ const hCodeIncipitMap: { starts: string[], language: string }[] = [
   { starts: ['@startuml', '@startmindmap', '@startsalt', '@startwbs', '@startgantt'], language: 'plant-uml' },
 ];
 
-
 export function inferCodeLanguage(blockTitle: string, code: string): string | null {
-
   // if we have a block title, use it to infer the language
   if (blockTitle) {
     // single word: assume it's the syntax highlight language
-    if (!blockTitle.includes('.'))
-      return hFileExtensionsMap.hasOwnProperty(blockTitle) ? hFileExtensionsMap[blockTitle] : blockTitle;
+    if (!blockTitle.includes('.')) return hFileExtensionsMap.hasOwnProperty(blockTitle) ? hFileExtensionsMap[blockTitle] : blockTitle;
 
     // file extension: map back to a language
     const extension = blockTitle.split('.').pop();
-    if (extension && hFileExtensionsMap.hasOwnProperty(extension))
-      return hFileExtensionsMap[extension];
+    if (extension && hFileExtensionsMap.hasOwnProperty(extension)) return hFileExtensionsMap[extension];
   }
 
   // or, based on the first line of code, return the language
-  for (const codeIncipit of hCodeIncipitMap)
-    if (codeIncipit.starts.some((start) => code.startsWith(start)))
-      return codeIncipit.language;
+  for (const codeIncipit of hCodeIncipitMap) if (codeIncipit.starts.some((start) => code.startsWith(start))) return codeIncipit.language;
 
   // or, use Prism with language tokenization to and-detect the language
   // FIXME: this is a very poor way to detect the language, as it's tokenizing it in any language
@@ -80,9 +85,5 @@ export function inferCodeLanguage(blockTitle: string, code: string): string | nu
 export function highlightCode(inferredCodeLanguage: string | null, blockCode: string): string {
   // NOTE: to save power, we could skip highlighting until the block is complete (future feature)
   const safeHighlightLanguage = inferredCodeLanguage || 'typescript';
-  return Prism.highlight(
-    blockCode,
-    Prism.languages[safeHighlightLanguage] || Prism.languages.typescript,
-    safeHighlightLanguage,
-  );
+  return Prism.highlight(blockCode, Prism.languages[safeHighlightLanguage] || Prism.languages.typescript, safeHighlightLanguage);
 }

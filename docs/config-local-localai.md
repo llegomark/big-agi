@@ -16,15 +16,15 @@ For instance with [Use luna-ai-llama2 with docker compose](https://localai.io/ba
 - get the model
 - copy the prompt template
 - start docker
-    - -> the server will be listening on `localhost:8080`
-    - verify it works by going to [http://localhost:8080/v1/models](http://localhost:8080/v1/models) on
-      your browser and seeing listed the model you downloaded
+  - -> the server will be listening on `localhost:8080`
+  - verify it works by going to [http://localhost:8080/v1/models](http://localhost:8080/v1/models) on
+    your browser and seeing listed the model you downloaded
 
 ### Integrating LocalAI with big-AGI
 
 - Go to Models > Add a model source of type: **LocalAI**
 - Enter the address: `http://localhost:8080` (default)
-    - If running remotely, replace localhost with the IP of the machine. Make sure to use the **IP:Port** format
+  - If running remotely, replace localhost with the IP of the machine. Make sure to use the **IP:Port** format
 - Load the models
 - Select model & Chat
 

@@ -9,7 +9,7 @@ import { isMacUser } from '~/common/util/pwaUtils';
 /**
  * Shows a shortcut combo in a nicely presented dark box.
  */
-export function KeyStroke(props: { combo: string, dark?: boolean, sx?: SxProps }) {
+export function KeyStroke(props: { combo: string; dark?: boolean; sx?: SxProps }) {
   let combo = props.combo;
   if (isMacUser) {
     combo = combo.replace('Ctrl', '⌘');
@@ -17,7 +17,7 @@ export function KeyStroke(props: { combo: string, dark?: boolean, sx?: SxProps }
     // combo = combo.replace('Shift', '⇧');
   }
   return (
-    <Chip variant={props.dark ? 'solid' : 'outlined'} color='neutral' sx={{ ...hideOnMobile, ...props.sx }}>
+    <Chip variant={props.dark ? 'solid' : 'outlined'} color="neutral" sx={{ ...hideOnMobile, ...props.sx }}>
       {combo}
     </Chip>
     // <Box sx={{

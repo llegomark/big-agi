@@ -8,16 +8,13 @@ import { chatGptParseConversation, chatGptSharedChatSchema } from './import.chat
 import { postToPasteGGOrThrow, publishToInputSchema, publishToOutputSchema } from './publish.pastegg';
 import { storageDeleteOutputSchema, storageGetProcedure, storageMarkAsDeletedProcedure, storagePutOutputSchema, storagePutProcedure } from './storage.server';
 
-
 export type StoragePutSchema = z.infer<typeof storagePutOutputSchema>;
 
 export type StorageDeleteSchema = z.infer<typeof storageDeleteOutputSchema>;
 
 export type PublishedSchema = z.infer<typeof publishToOutputSchema>;
 
-
 export const tradeRouter = createTRPCRouter({
-
   /**
    * ChatGPT Shared Chats Importer
    */
@@ -25,14 +22,19 @@ export const tradeRouter = createTRPCRouter({
     .input(z.object({ url: z.string().url().startsWith('https://chat.openai.com/share/') }))
     .output(z.object({ data: chatGptSharedChatSchema, conversationId: z.string() }))
     .query(async ({ input: { url } }) => {
-
       // add headers that make it closest to a browser request
-      const htmlPage = await fetchTextOrTRPCError(url, 'GET', {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
-      }, undefined, 'ChatGPT Importer');
+      const htmlPage = await fetchTextOrTRPCError(
+        url,
+        'GET',
+        {
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+        },
+        undefined,
+        'ChatGPT Importer',
+      );
 
       const data = chatGptParseConversation(htmlPage);
 
@@ -65,8 +67,7 @@ export const tradeRouter = createTRPCRouter({
     .input(publishToInputSchema)
     .output(publishToOutputSchema)
     .mutation(async ({ input: { to, title, fileContent, fileName, origin } }) => {
-      if (to !== 'paste.gg' || !title || !fileContent || !fileName)
-        throw new Error('Invalid options');
+      if (to !== 'paste.gg' || !title || !fileContent || !fileName) throw new Error('Invalid options');
 
       const paste = await postToPasteGGOrThrow(title, fileName, fileContent, origin);
       if (paste?.status !== 'success')
@@ -83,5 +84,4 @@ export const tradeRouter = createTRPCRouter({
         created: result.created_at,
       };
     }),
-
 });

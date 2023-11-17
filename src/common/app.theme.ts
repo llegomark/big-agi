@@ -3,7 +3,6 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { extendTheme } from '@mui/joy';
 import { keyframes } from '@emotion/react';
 
-
 // CSS utils
 export const hideOnMobile = { display: { xs: 'none', md: 'flex' } };
 export const hideOnDesktop = { display: { xs: 'flex', md: 'none' } };
@@ -11,7 +10,6 @@ export const hideOnDesktop = { display: { xs: 'flex', md: 'none' } };
 // Dimensions
 export const settingsGap = 2;
 export const settingsCol1Width = 150;
-
 
 // Theme & Fonts
 
@@ -38,18 +36,18 @@ export const appTheme = extendTheme({
     light: {
       palette: {
         neutral: {
-          plainColor: 'var(--joy-palette-neutral-800)',     // [700 -> 800] Dropdown menu: increase text contrast a bit
-          solidBg: 'var(--joy-palette-neutral-700)',        // [500 -> 700] AppBar background & Button[solid]
-          solidHoverBg: 'var(--joy-palette-neutral-800)',   // [600 -> 800] Buttons[solid]:hover
+          plainColor: 'var(--joy-palette-neutral-800)', // [700 -> 800] Dropdown menu: increase text contrast a bit
+          solidBg: 'var(--joy-palette-neutral-700)', // [500 -> 700] AppBar background & Button[solid]
+          solidHoverBg: 'var(--joy-palette-neutral-800)', // [600 -> 800] Buttons[solid]:hover
         },
         // primary [800] > secondary [700 -> 800] > tertiary [600] > icon [500 -> 700]
         text: {
-          icon: 'var(--joy-palette-neutral-700)',           // <IconButton color='neutral' /> icon color
-          secondary: 'var(--joy-palette-neutral-800)',      // increase contrast a bit
+          icon: 'var(--joy-palette-neutral-700)', // <IconButton color='neutral' /> icon color
+          secondary: 'var(--joy-palette-neutral-800)', // increase contrast a bit
         },
         // popup [white] > surface [50] > level1 [100] > level2 [200] > level3 [300] > body [white -> 400]
         background: {
-          body: 'var(--joy-palette-neutral-400, #9FA6AD)',  // background to stand back after all levels
+          body: 'var(--joy-palette-neutral-400, #9FA6AD)', // background to stand back after all levels
         },
       },
     },
@@ -174,7 +172,6 @@ export const cssRainbowColorKeyframes = keyframes`
         color: rgb(204, 0, 102);
     }`;
 
-
 // Emotion Cache (with insertion point on the SSR pass)
 
 const isBrowser = typeof document !== 'undefined';
@@ -185,9 +182,7 @@ export function createEmotionCache() {
   if (isBrowser) {
     // On the client side, _document.tsx has a meta tag with the name "emotion-insertion-point" at the top of the <head>.
     // This assures that MUI styles are loaded first, and allows allows developers to easily override MUI styles with other solutions like CSS modules.
-    const emotionInsertionPoint = document.querySelector<HTMLMetaElement>(
-      'meta[name="emotion-insertion-point"]',
-    );
+    const emotionInsertionPoint = document.querySelector<HTMLMetaElement>('meta[name="emotion-insertion-point"]');
     insertionPoint = emotionInsertionPoint ?? undefined;
   }
 

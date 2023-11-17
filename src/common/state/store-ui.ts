@@ -74,8 +74,7 @@ interface UIPreferencesStore {
 export const useUIPreferencesStore = create<UIPreferencesStore>()(
   persist(
     (set) => ({
-
-      preferredLanguage: (typeof navigator !== 'undefined') && navigator.language || 'en-US',
+      preferredLanguage: (typeof navigator !== 'undefined' && navigator.language) || 'en-US',
       setPreferredLanguage: (preferredLanguage: string) => set({ preferredLanguage }),
 
       centerMode: 'wide',
@@ -104,7 +103,6 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       autoSetChatTitle: true,
       setAutoSetChatTitle: (autoSetChatTitle) => set({ autoSetChatTitle }),
-          
     }),
     {
       name: 'app-ui',
@@ -116,8 +114,7 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       migrate: (state: any, fromVersion: number): UIPreferencesStore => {
         // 0 -> 1: rename 'enterToSend' to 'enterIsNewline' (flip the meaning)
-        if (state && fromVersion === 0)
-          state.enterIsNewline = state['enterToSend'] === false;
+        if (state && fromVersion === 0) state.enterIsNewline = state['enterToSend'] === false;
         return state;
       },
     },

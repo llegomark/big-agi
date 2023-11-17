@@ -1,8 +1,6 @@
 export namespace Search {
-
   /// Client (Browser) -> Server (Next.js)
   export namespace API {
-
     export interface BriefResult {
       title: string;
       link: string;
@@ -12,12 +10,10 @@ export namespace Search {
       // displayLink: string;
       // formattedUrl: string;
     }
-
   }
 
   // This is the upstream API [rev-eng on 2023-04-27], for Server (Next.js) -> Upstream Server
   export namespace Wire {
-
     // https://developers.google.com/custom-search/v1/reference/rest/v1/cse/list
     export interface RequestParams {
       key: string; // API key
@@ -150,7 +146,5 @@ export namespace Search {
         src: string;
       }[];
     }*/
-
   }
-
 }

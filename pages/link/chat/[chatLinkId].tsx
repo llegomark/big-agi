@@ -5,10 +5,9 @@ import { AppChatLink } from '../../../src/apps/link/AppChatLink';
 
 import { AppLayout } from '~/common/layout/AppLayout';
 
-
 export default function ChatLinkPage() {
   const { query } = useRouter();
-  const chatLinkId = query?.chatLinkId as string ?? '';
+  const chatLinkId = (query?.chatLinkId as string) ?? '';
 
   return (
     <AppLayout suspendAutoModelsSetup>

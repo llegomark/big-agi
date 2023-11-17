@@ -6,16 +6,13 @@ import { db } from '~/server/db';
 import { publicProcedure } from '~/server/api/trpc.server';
 import { v4 as uuidv4 } from 'uuid';
 
-
 // configuration
 const DEFAULT_EXPIRES_SECONDS = 60 * 60 * 24 * 30; // 30 days
-
 
 /// Zod schemas
 
 const dataTypesSchema = z.enum([LinkStorageDataType.CHAT_V1]);
 const dataSchema = z.object({}).passthrough();
-
 
 const storagePutInputSchema = z.object({
   ownerId: z.string().optional(),
@@ -71,98 +68,90 @@ export const storageDeleteOutputSchema = z.object({
   error: z.string().optional(),
 });
 
-
 /// tRPC procedures
 
 /**
  * Writes dataObject to DB, returns ownerId, objectId, and deletionKey
  */
-export const storagePutProcedure =
-  publicProcedure
-    .input(storagePutInputSchema)
-    .output(storagePutOutputSchema)
-    .mutation(async ({ input }) => {
+export const storagePutProcedure = publicProcedure
+  .input(storagePutInputSchema)
+  .output(storagePutOutputSchema)
+  .mutation(async ({ input }) => {
+    const { ownerId, dataType, dataTitle, dataObject, expiresSeconds } = input;
 
-      const { ownerId, dataType, dataTitle, dataObject, expiresSeconds } = input;
-
-      const { id: objectId, ...rest } = await db.linkStorage.create({
-        select: {
-          id: true,
-          ownerId: true,
-          createdAt: true,
-          expiresAt: true,
-          deletionKey: true,
-        },
-        data: {
-          ownerId: ownerId || uuidv4(),
-          visibility: LinkStorageVisibility.UNLISTED,
-          dataType,
-          dataTitle,
-          dataSize: JSON.stringify(dataObject).length, // data size estimate
-          data: dataObject,
-          expiresAt: expiresSeconds === 0
+    const { id: objectId, ...rest } = await db.linkStorage.create({
+      select: {
+        id: true,
+        ownerId: true,
+        createdAt: true,
+        expiresAt: true,
+        deletionKey: true,
+      },
+      data: {
+        ownerId: ownerId || uuidv4(),
+        visibility: LinkStorageVisibility.UNLISTED,
+        dataType,
+        dataTitle,
+        dataSize: JSON.stringify(dataObject).length, // data size estimate
+        data: dataObject,
+        expiresAt:
+          expiresSeconds === 0
             ? undefined // never expires
             : new Date(Date.now() + 1000 * (expiresSeconds || DEFAULT_EXPIRES_SECONDS)), // default
-          deletionKey: uuidv4(),
-          isDeleted: false,
-        },
-      });
-
-      return {
-        type: 'success',
-        objectId,
-        ...rest,
-      };
-
+        deletionKey: uuidv4(),
+        isDeleted: false,
+      },
     });
 
+    return {
+      type: 'success',
+      objectId,
+      ...rest,
+    };
+  });
 
 /**
  * Reads an object from DB, if it exists, and is not expired, and is not marked as deleted
  */
-export const storageGetProcedure =
-  publicProcedure
-    .input(storageGetInputSchema)
-    .output(storageGetOutputSchema)
-    .query(async ({ input: { objectId, ownerId } }) => {
+export const storageGetProcedure = publicProcedure
+  .input(storageGetInputSchema)
+  .output(storageGetOutputSchema)
+  .query(async ({ input: { objectId, ownerId } }) => {
+    // read object
+    const result = await db.linkStorage.findUnique({
+      select: {
+        dataType: true,
+        dataTitle: true,
+        data: true,
+        createdAt: true,
+        expiresAt: true,
+      },
+      where: {
+        id: objectId,
+        ownerId: ownerId || undefined,
+        isDeleted: false,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+    });
 
-      // read object
-      const result = await db.linkStorage.findUnique({
-        select: {
-          dataType: true,
-          dataTitle: true,
-          data: true,
-          createdAt: true,
-          expiresAt: true,
-        },
-        where: {
-          id: objectId,
-          ownerId: ownerId || undefined,
-          isDeleted: false,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
-        },
-      });
+    // if not found, return error
+    if (!result)
+      return {
+        type: 'error',
+        error: 'Not found',
+      };
 
-      // if not found, return error
-      if (!result)
-        return {
-          type: 'error',
-          error: 'Not found',
-        };
+    if (typeof result.data !== 'object' || result.data === null)
+      return {
+        type: 'error',
+        error: 'Invalid data',
+      };
 
-      if (typeof result.data !== 'object' || result.data === null)
-        return {
-          type: 'error',
-          error: 'Invalid data',
-        };
-
-      // increment the read count
-      // NOTE: fire-and-forget; we don't care about the result
-      {
-        db.linkStorage.update({
+    // increment the read count
+    // NOTE: fire-and-forget; we don't care about the result
+    {
+      db.linkStorage
+        .update({
           select: {
             id: true,
           },
@@ -174,47 +163,44 @@ export const storageGetProcedure =
               increment: 1,
             },
           },
-        }).catch(() => null);
-      }
+        })
+        .catch(() => null);
+    }
 
-      return {
-        type: 'success',
-        dataType: result.dataType,
-        dataTitle: result.dataTitle,
-        dataObject: result.data as any,
-        storedAt: result.createdAt,
-        expiresAt: result.expiresAt,
-      };
-
-    });
-
+    return {
+      type: 'success',
+      dataType: result.dataType,
+      dataTitle: result.dataTitle,
+      dataObject: result.data as any,
+      storedAt: result.createdAt,
+      expiresAt: result.expiresAt,
+    };
+  });
 
 /**
  * Mark a public object as deleted, if it exists, and is not expired, and is not deleted
  */
-export const storageMarkAsDeletedProcedure =
-  publicProcedure
-    .input(storageDeleteInputSchema)
-    .output(storageDeleteOutputSchema)
-    .mutation(async ({ input: { objectId, ownerId, deletionKey } }) => {
-
-      const result = await db.linkStorage.updateMany({
-        where: {
-          id: objectId,
-          ownerId: ownerId || undefined,
-          deletionKey,
-          isDeleted: false,
-        },
-        data: {
-          isDeleted: true,
-          deletedAt: new Date(),
-        },
-      });
-
-      const success = result.count === 1;
-
-      return {
-        type: success ? 'success' : 'error',
-        error: success ? undefined : 'Not found',
-      };
+export const storageMarkAsDeletedProcedure = publicProcedure
+  .input(storageDeleteInputSchema)
+  .output(storageDeleteOutputSchema)
+  .mutation(async ({ input: { objectId, ownerId, deletionKey } }) => {
+    const result = await db.linkStorage.updateMany({
+      where: {
+        id: objectId,
+        ownerId: ownerId || undefined,
+        deletionKey,
+        isDeleted: false,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
     });
+
+    const success = result.count === 1;
+
+    return {
+      type: success ? 'success' : 'error',
+      error: success ? undefined : 'Not found',
+    };
+  });

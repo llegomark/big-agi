@@ -11,12 +11,16 @@ import { useUIPreferencesStore } from '~/common/state/store-ui';
 
 import { createAssistantTypingMessage, updatePurposeInHistory } from './editors';
 
-
 /**
  * The main "chat" function. TODO: this is here so we can soon move it to the data model.
  */
-export async function runAssistantUpdatingState(conversationId: string, history: DMessage[], assistantLlmId: DLLMId, systemPurpose: SystemPurposeId, enableFollowUps: boolean) {
-
+export async function runAssistantUpdatingState(
+  conversationId: string,
+  history: DMessage[],
+  assistantLlmId: DLLMId,
+  systemPurpose: SystemPurposeId,
+  enableFollowUps: boolean,
+) {
   // update the system message from the active Purpose, if not manually edited
   history = updatePurposeInHistory(conversationId, history, systemPurpose);
 
@@ -30,28 +34,21 @@ export async function runAssistantUpdatingState(conversationId: string, history:
 
   // stream the assistant's messages
   await streamAssistantMessage(assistantLlmId, history, controller.signal, (updatedMessage) =>
-    editMessage(conversationId, assistantMessageId, updatedMessage, false));
+    editMessage(conversationId, assistantMessageId, updatedMessage, false),
+  );
 
   // clear to send, again
   startTyping(conversationId, null);
 
   // auto-suggestions (fire/forget)
-  if (enableFollowUps)
-    autoSuggestions(conversationId, assistantMessageId);
+  if (enableFollowUps) autoSuggestions(conversationId, assistantMessageId);
 
   // update text, if needed (fire/forget)
   const { autoSetChatTitle } = useUIPreferencesStore.getState();
-  if (autoSetChatTitle)
-    autoTitle(conversationId);
+  if (autoSetChatTitle) autoTitle(conversationId);
 }
 
-
-async function streamAssistantMessage(
-  llmId: DLLMId, history: DMessage[],
-  abortSignal: AbortSignal,
-  editMessage: (updatedMessage: Partial<DMessage>) => void,
-) {
-
+async function streamAssistantMessage(llmId: DLLMId, history: DMessage[], abortSignal: AbortSignal, editMessage: (updatedMessage: Partial<DMessage>) => void) {
   // 📢 TTS: speak the first line, if configured
   const speakFirstLine = useElevenlabsStore.getState().elevenLabsAutoSpeak === 'firstLine';
   let firstLineSpoken = false;
@@ -65,8 +62,7 @@ async function streamAssistantMessage(
       // 📢 TTS
       if (updatedMessage?.text && speakFirstLine && !firstLineSpoken) {
         let cutPoint = updatedMessage.text.lastIndexOf('\n');
-        if (cutPoint < 0)
-          cutPoint = updatedMessage.text.lastIndexOf('. ');
+        if (cutPoint < 0) cutPoint = updatedMessage.text.lastIndexOf('. ');
         if (cutPoint > 100 && cutPoint < 400) {
           firstLineSpoken = true;
           const firstParagraph = updatedMessage.text.substring(0, cutPoint);

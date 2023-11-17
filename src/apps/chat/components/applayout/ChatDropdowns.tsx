@@ -3,22 +3,18 @@ import * as React from 'react';
 import { useChatLLMDropdown } from './useLLMDropdown';
 import { usePersonaIdDropdown } from './usePersonaDropdown';
 
-
-export function ChatDropdowns(props: {
-  conversationId: string | null
-}) {
-
+export function ChatDropdowns(props: { conversationId: string | null }) {
   // state
   const { chatLLMDropdown } = useChatLLMDropdown();
   const { personaDropdown } = usePersonaIdDropdown(props.conversationId);
 
-  return <>
+  return (
+    <>
+      {/* Model selector */}
+      {chatLLMDropdown}
 
-    {/* Model selector */}
-    {chatLLMDropdown}
-
-    {/* Persona selector */}
-    {personaDropdown}
-
-  </>;
+      {/* Persona selector */}
+      {personaDropdown}
+    </>
+  );
 }

@@ -13,32 +13,31 @@ import { useUIPreferencesStore } from '~/common/state/store-ui';
 
 import { ConversationItem } from './ConversationItem';
 
-
 type ListGrouping = 'off' | 'persona';
 
-export function ChatDrawerItems(props: {
-  conversationId: string | null
-  onDeleteAllConversations: () => void,
-  onImportConversation: () => void,
-}) {
-
+export function ChatDrawerItems(props: { conversationId: string | null; onDeleteAllConversations: () => void; onImportConversation: () => void }) {
   // local state
   const [grouping] = React.useState<ListGrouping>('off');
 
   // external state
-  const { conversationIDs, topNewConversationId, maxChatMessages, setActiveConversationId, createConversationOrSwitch, deleteConversation } = useChatStore(state => ({
-    conversationIDs: state.conversations.map(conversation => conversation.id),
-    topNewConversationId: state.conversations.length ? state.conversations[0].messages.length === 0 ? state.conversations[0].id : null : null,
-    maxChatMessages: state.conversations.reduce((longest, conversation) => Math.max(longest, conversation.messages.length), 0),
-    setActiveConversationId: state.setActiveConversationId,
-    createConversationOrSwitch: state.createConversationOrSwitch,
-    deleteConversation: state.deleteConversation,
-  }), shallow);
-  const { experimentalLabs, showSymbols } = useUIPreferencesStore(state => ({
-    experimentalLabs: state.experimentalLabs,
-    showSymbols: state.zenMode !== 'cleaner',
-  }), shallow);
-
+  const { conversationIDs, topNewConversationId, maxChatMessages, setActiveConversationId, createConversationOrSwitch, deleteConversation } = useChatStore(
+    (state) => ({
+      conversationIDs: state.conversations.map((conversation) => conversation.id),
+      topNewConversationId: state.conversations.length ? (state.conversations[0].messages.length === 0 ? state.conversations[0].id : null) : null,
+      maxChatMessages: state.conversations.reduce((longest, conversation) => Math.max(longest, conversation.messages.length), 0),
+      setActiveConversationId: state.setActiveConversationId,
+      createConversationOrSwitch: state.createConversationOrSwitch,
+      deleteConversation: state.deleteConversation,
+    }),
+    shallow,
+  );
+  const { experimentalLabs, showSymbols } = useUIPreferencesStore(
+    (state) => ({
+      experimentalLabs: state.experimentalLabs,
+      showSymbols: state.zenMode !== 'cleaner',
+    }),
+    shallow,
+  );
 
   const totalConversations = conversationIDs.length;
   const hasChats = totalConversations > 0;
@@ -50,16 +49,20 @@ export function ChatDrawerItems(props: {
     closeLayoutDrawer();
   };
 
-  const handleConversationActivate = React.useCallback((conversationId: string, closeMenu: boolean) => {
-    setActiveConversationId(conversationId);
-    if (closeMenu)
-      closeLayoutDrawer();
-  }, [setActiveConversationId]);
+  const handleConversationActivate = React.useCallback(
+    (conversationId: string, closeMenu: boolean) => {
+      setActiveConversationId(conversationId);
+      if (closeMenu) closeLayoutDrawer();
+    },
+    [setActiveConversationId],
+  );
 
-  const handleConversationDelete = React.useCallback((conversationId: string) => {
-    if (!singleChat && conversationId)
-      deleteConversation(conversationId);
-  }, [deleteConversation, singleChat]);
+  const handleConversationDelete = React.useCallback(
+    (conversationId: string) => {
+      if (!singleChat && conversationId) deleteConversation(conversationId);
+    },
+    [deleteConversation, singleChat],
+  );
 
   // grouping
   let sortedIds = conversationIDs;
@@ -68,11 +71,10 @@ export function ChatDrawerItems(props: {
 
     // group conversations by persona
     const groupedConversations: { [personaId: string]: string[] } = {};
-    conversations.forEach(conversation => {
+    conversations.forEach((conversation) => {
       const persona = conversation.systemPurposeId;
       if (persona) {
-        if (!groupedConversations[persona])
-          groupedConversations[persona] = [];
+        if (!groupedConversations[persona]) groupedConversations[persona] = [];
         groupedConversations[persona].push(conversation.id);
       }
     });
@@ -81,80 +83,83 @@ export function ChatDrawerItems(props: {
     sortedIds = Object.values(groupedConversations).flat();
   }
 
-  return <>
-
-    {/*<ListItem>*/}
-    {/*  <Typography level='body-sm'>*/}
-    {/*    Active chats*/}
-    {/*  </Typography>*/}
-    {/*</ListItem>*/}
-
-    <MenuItem disabled={!!topNewConversationId && topNewConversationId === props.conversationId} onClick={handleNew}>
-      <ListItemDecorator><AddIcon /></ListItemDecorator>
-      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-        New
-        {/*<KeyStroke combo='Ctrl + Alt + N' />*/}
-      </Box>
-    </MenuItem>
-
-    <ListDivider sx={{ mb: 0 }} />
-
-    <Box sx={{ flex: 1, overflowY: 'auto' }}>
-      {/*<ListItem sticky sx={{ justifyContent: 'space-between', boxShadow: 'sm' }}>*/}
+  return (
+    <>
+      {/*<ListItem>*/}
       {/*  <Typography level='body-sm'>*/}
-      {/*    Conversations*/}
+      {/*    Active chats*/}
       {/*  </Typography>*/}
-      {/*  <ToggleButtonGroup variant='soft' size='sm' value={grouping} onChange={(_event, newValue) => newValue && setGrouping(newValue)}>*/}
-      {/*    <IconButton value='off'>*/}
-      {/*      <AccessTimeIcon />*/}
-      {/*    </IconButton>*/}
-      {/*    <IconButton value='persona'>*/}
-      {/*      <PersonIcon />*/}
-      {/*    </IconButton>*/}
-      {/*  </ToggleButtonGroup>*/}
       {/*</ListItem>*/}
 
-      {sortedIds.map(conversationId =>
-        <ConversationItem
-          key={'c-id-' + conversationId}
-          conversationId={conversationId}
-          isActive={conversationId === props.conversationId}
-          isSingle={singleChat}
-          showSymbols={showSymbols}
-          maxChatMessages={(experimentalLabs || softMaxReached) ? maxChatMessages : 0}
-          conversationActivate={handleConversationActivate}
-          conversationDelete={handleConversationDelete}
-        />)}
-    </Box>
+      <MenuItem disabled={!!topNewConversationId && topNewConversationId === props.conversationId} onClick={handleNew}>
+        <ListItemDecorator>
+          <AddIcon />
+        </ListItemDecorator>
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+          New
+          {/*<KeyStroke combo='Ctrl + Alt + N' />*/}
+        </Box>
+      </MenuItem>
 
-    <ListDivider sx={{ mt: 0 }} />
+      <ListDivider sx={{ mb: 0 }} />
 
-    <MenuItem onClick={props.onImportConversation}>
-      <ListItemDecorator>
-        <FileUploadIcon />
-      </ListItemDecorator>
-      Import chats
-      <OpenAIIcon sx={{ fontSize: 'xl', ml: 'auto' }} />
-    </MenuItem>
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        {/*<ListItem sticky sx={{ justifyContent: 'space-between', boxShadow: 'sm' }}>*/}
+        {/*  <Typography level='body-sm'>*/}
+        {/*    Conversations*/}
+        {/*  </Typography>*/}
+        {/*  <ToggleButtonGroup variant='soft' size='sm' value={grouping} onChange={(_event, newValue) => newValue && setGrouping(newValue)}>*/}
+        {/*    <IconButton value='off'>*/}
+        {/*      <AccessTimeIcon />*/}
+        {/*    </IconButton>*/}
+        {/*    <IconButton value='persona'>*/}
+        {/*      <PersonIcon />*/}
+        {/*    </IconButton>*/}
+        {/*  </ToggleButtonGroup>*/}
+        {/*</ListItem>*/}
 
-    <MenuItem disabled={!hasChats} onClick={props.onDeleteAllConversations}>
-      <ListItemDecorator><DeleteOutlineIcon /></ListItemDecorator>
-      <Typography>
-        Delete {totalConversations >= 2 ? `all ${totalConversations} chats` : 'chat'}
-      </Typography>
-    </MenuItem>
+        {sortedIds.map((conversationId) => (
+          <ConversationItem
+            key={'c-id-' + conversationId}
+            conversationId={conversationId}
+            isActive={conversationId === props.conversationId}
+            isSingle={singleChat}
+            showSymbols={showSymbols}
+            maxChatMessages={experimentalLabs || softMaxReached ? maxChatMessages : 0}
+            conversationActivate={handleConversationActivate}
+            conversationDelete={handleConversationDelete}
+          />
+        ))}
+      </Box>
 
-    {/*<ListItem>*/}
-    {/*  <Typography level='body-sm'>*/}
-    {/*    Scratchpad*/}
-    {/*  </Typography>*/}
-    {/*</ListItem>*/}
-    {/*<MenuItem>*/}
-    {/*  <ListItemDecorator />*/}
-    {/*  <Typography sx={{ opacity: 0.5 }}>*/}
-    {/*    Feature <Link href={`${Brand.URIs.OpenRepo}/issues/17`} target='_blank'>#17</Link>*/}
-    {/*  </Typography>*/}
-    {/*</MenuItem>*/}
+      <ListDivider sx={{ mt: 0 }} />
 
-  </>;
+      <MenuItem onClick={props.onImportConversation}>
+        <ListItemDecorator>
+          <FileUploadIcon />
+        </ListItemDecorator>
+        Import chats
+        <OpenAIIcon sx={{ fontSize: 'xl', ml: 'auto' }} />
+      </MenuItem>
+
+      <MenuItem disabled={!hasChats} onClick={props.onDeleteAllConversations}>
+        <ListItemDecorator>
+          <DeleteOutlineIcon />
+        </ListItemDecorator>
+        <Typography>Delete {totalConversations >= 2 ? `all ${totalConversations} chats` : 'chat'}</Typography>
+      </MenuItem>
+
+      {/*<ListItem>*/}
+      {/*  <Typography level='body-sm'>*/}
+      {/*    Scratchpad*/}
+      {/*  </Typography>*/}
+      {/*</ListItem>*/}
+      {/*<MenuItem>*/}
+      {/*  <ListItemDecorator />*/}
+      {/*  <Typography sx={{ opacity: 0.5 }}>*/}
+      {/*    Feature <Link href={`${Brand.URIs.OpenRepo}/issues/17`} target='_blank'>#17</Link>*/}
+      {/*  </Typography>*/}
+      {/*</MenuItem>*/}
+    </>
+  );
 }

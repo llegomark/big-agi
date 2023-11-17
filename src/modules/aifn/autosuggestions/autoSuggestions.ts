@@ -3,7 +3,6 @@ import { useModelsStore } from '~/modules/llms/store-llms';
 
 import { useChatStore } from '~/common/state/store-chats';
 
-
 /*const suggestUserFollowUpFn: VChatFunctionIn = {
   name: 'suggest_user_prompt',
   description: 'Surprises the user with a thought-provoking question/prompt/contrarian idea',
@@ -31,34 +30,34 @@ const suggestPlantUMLFn: VChatFunctionIn = {
     properties: {
       type: {
         type: 'string',
-        description: 'The suitable type of diagram. Options: sequence, class, usecase, activity, component, state, object, deployment, wireframe, mindmap, gantt, flowchart, or an empty string.',
+        description:
+          'The suitable type of diagram. Options: sequence, class, usecase, activity, component, state, object, deployment, wireframe, mindmap, gantt, flowchart, or an empty string.',
       },
       code: {
         type: 'string',
-        description: 'A valid PlantUML string (@startuml...@enduml) to be rendered as a diagram or mindmap, or an empty string. Use quotation marks for proper escaping, avoid external references and avoid unescaped spaces in participants/actors.',
+        description:
+          'A valid PlantUML string (@startuml...@enduml) to be rendered as a diagram or mindmap, or an empty string. Use quotation marks for proper escaping, avoid external references and avoid unescaped spaces in participants/actors.',
       },
     },
     required: ['type', 'code'],
   },
 };
 
-
 /**
  * Formulates proposals for follow-up questions, prompts, and counterpoints, based on the last 2 chat messages
  */
 export function autoSuggestions(conversationId: string, assistantMessageId: string) {
-
   // use valid fast model
   const { funcLLMId } = useModelsStore.getState();
   if (!funcLLMId) return;
 
   // only operate on valid conversations, without any title
   const { conversations, editMessage } = useChatStore.getState();
-  const conversation = conversations.find(c => c.id === conversationId) ?? null;
+  const conversation = conversations.find((c) => c.id === conversationId) ?? null;
   if (!conversation || conversation.messages.length < 3) return;
 
   // find the index of the assistant message
-  const assistantMessageIndex = conversation.messages.findIndex(m => m.id === assistantMessageId);
+  const assistantMessageIndex = conversation.messages.findIndex((m) => m.id === assistantMessageId);
   if (assistantMessageIndex < 2) return;
   const userMessage = conversation.messages[assistantMessageIndex - 1];
   const assistantMessage = conversation.messages[assistantMessageIndex];
@@ -68,7 +67,6 @@ export function autoSuggestions(conversationId: string, assistantMessageId: stri
   // Execute the following follow-ups in parallel
   // const assistantMessageId = assistantMessage.id;
   let assistantMessageText = assistantMessage.text;
-
 
   // Follow-up: Question
   /*callChatGenerateWithFunctions(funcLLMId, [
@@ -80,21 +78,22 @@ export function autoSuggestions(conversationId: string, assistantMessageId: stri
     // assistantMessageText += '\n\n' + chatResponse?.function_arguments?.question_as_user + '\n';
   });*/
 
-
   // Follow-up: Auto-Diagrams
-  void callChatGenerateWithFunctions(funcLLMId, [
+  void callChatGenerateWithFunctions(
+    funcLLMId,
+    [
       { role: 'system', content: systemMessage.text },
       { role: 'user', content: userMessage.text },
       { role: 'assistant', content: assistantMessageText },
-    ], [suggestPlantUMLFn], 'draw_plantuml_diagram',
-  ).then(chatResponse => {
-
+    ],
+    [suggestPlantUMLFn],
+    'draw_plantuml_diagram',
+  ).then((chatResponse) => {
     // parse the output PlantUML string, if any
     const functionArguments = chatResponse?.function_arguments ?? null;
     if (functionArguments) {
-      const { code, type }: { code: string, type: string } = functionArguments as any;
+      const { code, type }: { code: string; type: string } = functionArguments as any;
       if (code && type) {
-
         // validate the code
         const plantUML = code.trim();
         if (!plantUML.startsWith('@start') || !(plantUML.endsWith('@enduml') || plantUML.endsWith('@endmindmap'))) return;
@@ -102,9 +101,7 @@ export function autoSuggestions(conversationId: string, assistantMessageId: stri
         // append the PlantUML diagram to the assistant response
         assistantMessageText += `\n\n\`\`\`${type}.diagram\n${plantUML}\n\`\`\`\n`;
         editMessage(conversationId, assistantMessageId, { text: assistantMessageText }, false);
-
       }
     }
   });
-
 }

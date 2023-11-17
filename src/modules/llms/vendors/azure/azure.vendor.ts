@@ -11,7 +11,6 @@ import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { AzureSourceSetup } from './AzureSourceSetup';
 
-
 // special symbols
 export const isValidAzureApiKey = (apiKey?: string) => !!apiKey && apiKey.length >= 32;
 
@@ -61,7 +60,13 @@ export const ModelVendorAzure: IModelVendor<SourceSetupAzure, LLMOptionsOpenAI, 
   callChatGenerate(llm, messages: VChatMessageIn[], maxTokens?: number): Promise<VChatMessageOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, null, null, maxTokens);
   },
-  callChatGenerateWF(llm, messages: VChatMessageIn[], functions: VChatFunctionIn[] | null, forceFunctionName: string | null, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut> {
+  callChatGenerateWF(
+    llm,
+    messages: VChatMessageIn[],
+    functions: VChatFunctionIn[] | null,
+    forceFunctionName: string | null,
+    maxTokens?: number,
+  ): Promise<VChatMessageOrFunctionCallOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, functions, forceFunctionName, maxTokens);
   },
 };

@@ -6,10 +6,8 @@ import { DLLMId } from '~/modules/llms/store-llms';
 import { callApiSearchGoogle } from '~/modules/google/search.client';
 import { callChatGenerate, VChatMessageIn } from '~/modules/llms/transports/chatGenerate';
 
-
 // prompt to implement the ReAct paradigm: https://arxiv.org/abs/2210.03629
-const reActPrompt: string =
-  `You are a Question Answering AI with reasoning ability.
+const reActPrompt: string = `You are a Question Answering AI with reasoning ability.
 You will receive a Question from the User.
 In order to answer any Question, you run in a loop of Thought, Action, PAUSE, Observation.
 If from the Thought or Observation you can derive the answer to the Question, you MUST also output an "Answer: ", followed by the answer and the answer ONLY, without explanation of the steps used to arrive at the answer.
@@ -52,12 +50,9 @@ You then output:
 Answer: The capital of France is Paris
 `;
 
-
 export const CmdRunReact: string[] = ['/react'];
 
-
 const actionRe = /^Action: (\w+): (.*)$/;
-
 
 /**
  * State - Abstraction used for serialization, save/restore, inspection, debugging, rendering, etc.
@@ -74,7 +69,6 @@ interface State {
 }
 
 export class Agent {
-
   // NOTE: this is here for demo, but the whole loop could be moved to the caller's event loop
   async reAct(question: string, llmId: DLLMId, maxTurns = 5, log: (...data: any[]) => void = console.log, show: (state: object) => void): Promise<string> {
     let i = 0;
@@ -90,8 +84,7 @@ export class Agent {
     // return only the 'Answer: ' part of the result
     if (S.result) {
       const idx = S.result.indexOf('Answer: ');
-      if (idx !== -1)
-        return S.result.slice(idx + 8);
+      if (idx !== -1) return S.result.slice(idx + 8);
     }
     return S.result || 'No result';
   }
@@ -157,13 +150,10 @@ export class Agent {
   }
 }
 
-
 type ActionFunction = (input: string) => Promise<string>;
 
 async function wikipedia(q: string): Promise<string> {
-  const response = await fetch(
-    `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`,
-  );
+  const response = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`);
   const data = await response.json();
   return data.query.search[0].snippet;
 }

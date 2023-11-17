@@ -15,85 +15,85 @@ import { LLMOptionsModal } from './LLMOptionsModal';
 import { ModelsList } from './ModelsList';
 import { ModelsSourceSelector } from './ModelsSourceSelector';
 
-
 function VendorSourceSetup(props: { source: DModelSource }) {
   const vendor = findVendorById(props.source.vId);
-  if (!vendor)
-    return 'Configuration issue: Vendor not found for Source ' + props.source.id;
+  if (!vendor) return 'Configuration issue: Vendor not found for Source ' + props.source.id;
   return <vendor.SourceSetupComponent sourceId={props.source.id} />;
 }
 
-
 export function ModelsModal(props: { suspendAutoModelsSetup?: boolean }) {
-
   // local state
   const [_selectedSourceId, setSelectedSourceId] = React.useState<DModelSourceId | null>(null);
   const [showAllSources, setShowAllSources] = React.useState<boolean>(false);
 
   // external state
   const [modelsSetupOpen, llmOptionsId] = useLayoutModelsSetup();
-  const { modelSources, llmCount } = useModelsStore(state => ({
-    modelSources: state.sources,
-    llmCount: state.llms.length,
-  }), shallow);
+  const { modelSources, llmCount } = useModelsStore(
+    (state) => ({
+      modelSources: state.sources,
+      llmCount: state.llms.length,
+    }),
+    shallow,
+  );
   useGlobalShortcut('m', true, true, false, openLayoutModelsSetup);
 
   // auto-select the first source - note: we could use a useEffect() here, but this is more efficient
   // also note that state-persistence is unneeded
   const selectedSourceId = _selectedSourceId ?? modelSources[0]?.id ?? null;
 
-  const activeSource = modelSources.find(source => source.id === selectedSourceId);
+  const activeSource = modelSources.find((source) => source.id === selectedSourceId);
 
   const multiSource = modelSources.length > 1;
 
   // if no sources at startup, open the modal
   React.useEffect(() => {
-    if (!selectedSourceId && !props.suspendAutoModelsSetup)
-      openLayoutModelsSetup();
+    if (!selectedSourceId && !props.suspendAutoModelsSetup) openLayoutModelsSetup();
   }, [selectedSourceId, props.suspendAutoModelsSetup]);
 
   // add the default source on cold - will require setup
   React.useEffect(() => {
     const { addSource, sources } = useModelsStore.getState();
-    if (!sources.length && !props.suspendAutoModelsSetup)
-      addSource(createModelSourceForDefaultVendor(sources));
+    if (!sources.length && !props.suspendAutoModelsSetup) addSource(createModelSourceForDefaultVendor(sources));
   }, [props.suspendAutoModelsSetup]);
 
+  return (
+    <>
+      {/* Sources Setup */}
+      {modelsSetupOpen && (
+        <GoodModal
+          title={
+            <>
+              Configure <b>AI Models</b>
+            </>
+          }
+          startButton={
+            multiSource ? (
+              <Checkbox label="all vendors" sx={{ my: 'auto' }} checked={showAllSources} onChange={() => setShowAllSources((all) => !all)} />
+            ) : undefined
+          }
+          open
+          onClose={closeLayoutModelsSetup}
+        >
+          <ModelsSourceSelector selectedSourceId={selectedSourceId} setSelectedSourceId={setSelectedSourceId} />
 
-  return <>
+          {!!activeSource && <Divider />}
 
-    {/* Sources Setup */}
-    {modelsSetupOpen && <GoodModal
-      title={<>Configure <b>AI Models</b></>}
-      startButton={
-        multiSource ? <Checkbox
-          label='all vendors' sx={{ my: 'auto' }}
-          checked={showAllSources} onChange={() => setShowAllSources(all => !all)}
-        /> : undefined
-      }
-      open onClose={closeLayoutModelsSetup}
-    >
+          {!!activeSource && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: settingsGap }}>
+              <VendorSourceSetup source={activeSource} />
+            </Box>
+          )}
 
-      <ModelsSourceSelector selectedSourceId={selectedSourceId} setSelectedSourceId={setSelectedSourceId} />
+          {!!llmCount && <Divider />}
 
-      {!!activeSource && <Divider />}
+          {!!llmCount && <ModelsList filterSourceId={showAllSources ? null : selectedSourceId} />}
 
-      {!!activeSource && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: settingsGap }}>
-          <VendorSourceSetup source={activeSource} />
-        </Box>
+          <Divider />
+        </GoodModal>
       )}
 
-      {!!llmCount && <Divider />}
-
-      {!!llmCount && <ModelsList filterSourceId={showAllSources ? null : selectedSourceId} />}
-
-      <Divider />
-
-    </GoodModal>}
-
-    {/* per-LLM options */}
-    {!!llmOptionsId && <LLMOptionsModal id={llmOptionsId} />}
-
-  </>;
+      {/* per-LLM options */}
+      {!!llmOptionsId && <LLMOptionsModal id={llmOptionsId} />}
+    </>
+  );
 }

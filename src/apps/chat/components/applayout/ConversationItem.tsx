@@ -12,41 +12,42 @@ import { InlineTextarea } from '~/common/components/InlineTextarea';
 import { conversationTitle, useChatStore } from '~/common/state/store-chats';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 
-
 const DEBUG_CONVERSATION_IDs = false;
 
-
 export function ConversationItem(props: {
-  conversationId: string,
-  isActive: boolean, isSingle: boolean, showSymbols: boolean, maxChatMessages: number,
-  conversationActivate: (conversationId: string, closeMenu: boolean) => void,
-  conversationDelete: (conversationId: string) => void,
+  conversationId: string;
+  isActive: boolean;
+  isSingle: boolean;
+  showSymbols: boolean;
+  maxChatMessages: number;
+  conversationActivate: (conversationId: string, closeMenu: boolean) => void;
+  conversationDelete: (conversationId: string) => void;
 }) {
-
   // state
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [deleteArmed, setDeleteArmed] = React.useState(false);
-  const doubleClickToEdit = useUIPreferencesStore(state => state.doubleClickToEdit);
+  const doubleClickToEdit = useUIPreferencesStore((state) => state.doubleClickToEdit);
 
   // bind to conversation
-  const cState = useChatStore(state => {
-    const conversation = state.conversations.find(conversation => conversation.id === props.conversationId);
-    return conversation && {
-      isNew: conversation.messages.length === 0,
-      messageCount: conversation.messages.length,
-      assistantTyping: !!conversation.abortController,
-      systemPurposeId: conversation.systemPurposeId,
-      title: conversationTitle(conversation, 'new conversation'),
-      setUserTitle: state.setUserTitle,
-    };
+  const cState = useChatStore((state) => {
+    const conversation = state.conversations.find((conversation) => conversation.id === props.conversationId);
+    return (
+      conversation && {
+        isNew: conversation.messages.length === 0,
+        messageCount: conversation.messages.length,
+        assistantTyping: !!conversation.abortController,
+        systemPurposeId: conversation.systemPurposeId,
+        title: conversationTitle(conversation, 'new conversation'),
+        setUserTitle: state.setUserTitle,
+      }
+    );
   }, shallow);
 
   // auto-close the arming menu when clicking away
   // NOTE: there currently is a bug (race condition) where the menu closes on a new item right after opening
   //       because the isActive prop is not yet updated
   React.useEffect(() => {
-    if (deleteArmed && !props.isActive)
-      setDeleteArmed(false);
+    if (deleteArmed && !props.isActive) setDeleteArmed(false);
   }, [deleteArmed, props.isActive]);
 
   // sanity check: shouldn't happen, but just in case
@@ -64,10 +65,8 @@ export function ConversationItem(props: {
 
   const handleDeleteBegin = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!props.isActive)
-      props.conversationActivate(props.conversationId, false);
-    else
-      setDeleteArmed(true);
+    if (!props.isActive) props.conversationActivate(props.conversationId, false);
+    else setDeleteArmed(true);
   };
 
   const handleDeleteConfirm = (e: React.MouseEvent) => {
@@ -83,11 +82,12 @@ export function ConversationItem(props: {
   const textSymbol = SystemPurposes[systemPurposeId]?.symbol || '❓';
   const buttonSx: SxProps = { ml: 1, ...(props.isActive ? { color: 'white' } : {}) };
 
-  const progress = props.maxChatMessages ? 100 * messageCount / props.maxChatMessages : 0;
+  const progress = props.maxChatMessages ? (100 * messageCount) / props.maxChatMessages : 0;
 
   return (
     <MenuItem
-      variant={props.isActive ? 'solid' : 'plain'} color='neutral'
+      variant={props.isActive ? 'solid' : 'plain'}
+      color="neutral"
       selected={props.isActive}
       onClick={handleActivate}
       sx={{
@@ -97,22 +97,28 @@ export function ConversationItem(props: {
         '&:hover > button': { opacity: 1 },
       }}
     >
-
       {/* Optional prgoress bar */}
       {progress > 0 && (
-        <Box sx={{
-          backgroundColor: 'neutral.softActiveBg',
-          position: 'absolute', left: 0, bottom: 0, width: progress + '%', height: 4,
-        }} />
+        <Box
+          sx={{
+            backgroundColor: 'neutral.softActiveBg',
+            position: 'absolute',
+            left: 0,
+            bottom: 0,
+            width: progress + '%',
+            height: 4,
+          }}
+        />
       )}
 
       {/* Icon */}
-      {props.showSymbols && <ListItemDecorator>
-        {assistantTyping
-          ? (
+      {props.showSymbols && (
+        <ListItemDecorator>
+          {assistantTyping ? (
             <Avatar
-              alt='typing' variant='plain'
-              src='https://i.giphy.com/media/jJxaUysjzO9ri/giphy.webp'
+              alt="typing"
+              variant="plain"
+              src="https://i.giphy.com/media/jJxaUysjzO9ri/giphy.webp"
               sx={{
                 width: 24,
                 height: 24,
@@ -120,23 +126,19 @@ export function ConversationItem(props: {
               }}
             />
           ) : (
-            <Typography sx={{ fontSize: '18px' }}>
-              {isNew ? '' : textSymbol}
-            </Typography>
+            <Typography sx={{ fontSize: '18px' }}>{isNew ? '' : textSymbol}</Typography>
           )}
-      </ListItemDecorator>}
+        </ListItemDecorator>
+      )}
 
       {/* Text */}
       {!isEditingTitle ? (
-
-        <Box onDoubleClick={() => doubleClickToEdit ? handleEditBegin() : null} sx={{ flexGrow: 1 }}>
-          {DEBUG_CONVERSATION_IDs ? props.conversationId.slice(0, 10) : title}{assistantTyping && '...'}
+        <Box onDoubleClick={() => (doubleClickToEdit ? handleEditBegin() : null)} sx={{ flexGrow: 1 }}>
+          {DEBUG_CONVERSATION_IDs ? props.conversationId.slice(0, 10) : title}
+          {assistantTyping && '...'}
         </Box>
-
       ) : (
-
         <InlineTextarea initialText={title} onEdit={handleEdited} sx={{ ml: -1.5, mr: -0.5, flexGrow: 1 }} />
-
       )}
 
       {/* // TODO: Commented code */}
@@ -153,23 +155,27 @@ export function ConversationItem(props: {
       {/* Delete Arming */}
       {!props.isSingle && !deleteArmed && (
         <IconButton
-          variant={props.isActive ? 'solid' : 'outlined'} color='neutral'
-          size='sm' sx={{ opacity: { xs: 1, sm: 0 }, transition: 'opacity 0.3s', ...buttonSx }}
-          onClick={handleDeleteBegin}>
+          variant={props.isActive ? 'solid' : 'outlined'}
+          color="neutral"
+          size="sm"
+          sx={{ opacity: { xs: 1, sm: 0 }, transition: 'opacity 0.3s', ...buttonSx }}
+          onClick={handleDeleteBegin}
+        >
           <DeleteOutlineIcon />
         </IconButton>
       )}
 
       {/* Delete / Cancel buttons */}
-      {!props.isSingle && deleteArmed && <>
-        <IconButton size='sm' variant='solid' color='danger' sx={buttonSx} onClick={handleDeleteConfirm}>
-          <DeleteOutlineIcon />
-        </IconButton>
-        <IconButton size='sm' variant='solid' color='neutral' sx={buttonSx} onClick={handleDeleteCancel}>
-          <CloseIcon />
-        </IconButton>
-      </>}
+      {!props.isSingle && deleteArmed && (
+        <>
+          <IconButton size="sm" variant="solid" color="danger" sx={buttonSx} onClick={handleDeleteConfirm}>
+            <DeleteOutlineIcon />
+          </IconButton>
+          <IconButton size="sm" variant="solid" color="neutral" sx={buttonSx} onClick={handleDeleteCancel}>
+            <CloseIcon />
+          </IconButton>
+        </>
+      )}
     </MenuItem>
-
   );
 }

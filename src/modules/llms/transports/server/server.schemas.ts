@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { LLM_IF_OAI_Chat, LLM_IF_OAI_Complete, LLM_IF_OAI_Fn, LLM_IF_OAI_Vision } from '../../store-llms';
 
-
 const modelDescriptionSchema = z.object({
   id: z.string(),
   label: z.string(),

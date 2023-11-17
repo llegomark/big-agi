@@ -11,7 +11,6 @@ import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { OpenRouterSourceSetup } from './OpenRouterSourceSetup';
 
-
 // special symbols
 export const isValidOpenRouterKey = (apiKey?: string) => !!apiKey && apiKey.startsWith('sk-or-') && apiKey.length > 40;
 
@@ -61,7 +60,13 @@ export const ModelVendorOpenRouter: IModelVendor<SourceSetupOpenRouter, LLMOptio
   callChatGenerate(llm, messages: VChatMessageIn[], maxTokens?: number): Promise<VChatMessageOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, null, null, maxTokens);
   },
-  callChatGenerateWF(llm, messages: VChatMessageIn[], functions: VChatFunctionIn[] | null, forceFunctionName: string | null, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut> {
+  callChatGenerateWF(
+    llm,
+    messages: VChatMessageIn[],
+    functions: VChatFunctionIn[] | null,
+    forceFunctionName: string | null,
+    maxTokens?: number,
+  ): Promise<VChatMessageOrFunctionCallOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, functions, forceFunctionName, maxTokens);
   },
 };

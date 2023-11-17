@@ -9,7 +9,7 @@ Docker ensures faster development cycles, easier collaboration, and seamless env
    ```bash
    git clone https://github.com/enricoros/big-agi.git
    cd big-agi
-   ``` 
+   ```
 2. **Build the Docker Image**: Build a local docker image from the provided Dockerfile:
    ```bash
    docker build -t big-agi .
@@ -40,6 +40,7 @@ pushed to the `main` branch.
 Official pre-built containers: [ghcr.io/enricoros/big-agi](https://github.com/enricoros/big-agi/pkgs/container/big-agi)
 
 Run official pre-built containers:
+
 ```bash
 docker run -d -p 3000:3000 ghcr.io/enricoros/big-agi
 ```

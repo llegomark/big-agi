@@ -2,7 +2,6 @@ import { createEmptyReadableStream, safeErrorString, serverFetchOrThrow } from '
 
 import { elevenlabsAccess, elevenlabsVoiceId, ElevenlabsWire, speechInputSchema } from '~/modules/elevenlabs/elevenlabs.router';
 
-
 /* NOTE: Why does this file even exist?
 
 This file is a workaround for a limitation in tRPC; it does not support ArrayBuffer responses,
@@ -14,12 +13,8 @@ and client-side vs. the tRPC implementation. So at lease we recycle the input st
 */
 const handler = async (req: Request) => {
   try {
-
     // construct the upstream request
-    const {
-      elevenKey, text, voiceId, nonEnglish,
-      streaming, streamOptimization,
-    } = speechInputSchema.parse(await req.json());
+    const { elevenKey, text, voiceId, nonEnglish, streaming, streamOptimization } = speechInputSchema.parse(await req.json());
     const path = `/v1/text-to-speech/${elevenlabsVoiceId(voiceId)}` + (streaming ? `/stream?optimize_streaming_latency=${streamOptimization || 1}` : '');
     const { headers, url } = elevenlabsAccess(elevenKey, path);
     const body: ElevenlabsWire.TTSRequest = {
@@ -40,7 +35,6 @@ const handler = async (req: Request) => {
     // stream the data to the client
     const audioReadableStream = upstreamResponse.body || createEmptyReadableStream();
     return new Response(audioReadableStream, { status: 200, headers: { 'Content-Type': 'audio/mpeg' } });
-
   } catch (error: any) {
     const fetchOrVendorError = safeErrorString(error) + (error?.cause ? ' · ' + error.cause : '');
     console.log(`api/elevenlabs/speech: fetch issue: ${fetchOrVendorError}`);

@@ -12,11 +12,9 @@ import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { OllamaSourceSetup } from './OllamaSourceSetup';
 
-
 export interface SourceSetupOllama {
   ollamaHost: string;
 }
-
 
 export const ModelVendorOllama: IModelVendor<SourceSetupOllama, LLMOptionsOpenAI, OllamaAccessSchema> = {
   id: 'ollama',
@@ -44,17 +42,18 @@ export const ModelVendorOllama: IModelVendor<SourceSetupOllama, LLMOptionsOpenAI
   },
 };
 
-
 /**
  * This function either returns the LLM message, or throws a descriptive error string
  */
 async function ollamaCallChatGenerate<TOut = VChatMessageOut>(
-  access: OllamaAccessSchema, llmOptions: Partial<LLMOptionsOpenAI>, messages: VChatMessageIn[],
+  access: OllamaAccessSchema,
+  llmOptions: Partial<LLMOptionsOpenAI>,
+  messages: VChatMessageIn[],
   maxTokens?: number,
 ): Promise<TOut> {
   const { llmRef, llmTemperature = 0.5, llmResponseTokens } = llmOptions;
   try {
-    return await apiAsync.llmOllama.chatGenerate.mutate({
+    return (await apiAsync.llmOllama.chatGenerate.mutate({
       access,
       model: {
         id: llmRef!,
@@ -62,7 +61,7 @@ async function ollamaCallChatGenerate<TOut = VChatMessageOut>(
         maxTokens: maxTokens || llmResponseTokens || 1024,
       },
       history: messages,
-    }) as TOut;
+    })) as TOut;
   } catch (error: any) {
     const errorMessage = error?.message || error?.toString() || 'Ollama Chat Generate Error';
     console.error(`ollamaCallChatGenerate: ${errorMessage}`);

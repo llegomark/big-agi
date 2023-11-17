@@ -1,9 +1,7 @@
 import { callChatGenerate } from '~/modules/llms/transports/chatGenerate';
 import { useModelsStore } from '~/modules/llms/store-llms';
 
-
-const simpleImagineSystemPrompt =
-  `As an AI art prompt writer, create captivating prompts using adjectives, nouns, and artistic references that a non-technical person can understand.
+const simpleImagineSystemPrompt = `As an AI art prompt writer, create captivating prompts using adjectives, nouns, and artistic references that a non-technical person can understand.
 Craft creative, coherent and descriptive captions to guide the AI in generating visually striking artwork.
 Provide output as a lowercase prompt and nothing else.`;
 

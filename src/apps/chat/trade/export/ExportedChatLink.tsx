@@ -22,9 +22,7 @@ import { webShare, webSharePresent } from '~/common/util/pwaUtils';
 import { removeChatLinkItem } from '../store-sharing';
 import { type StorageDeleteSchema, type StoragePutSchema } from '../server/trade.router';
 
-
-export function ExportedChatLink(props: { onClose: () => void, response: StoragePutSchema, open: boolean }) {
-
+export function ExportedChatLink(props: { onClose: () => void; response: StoragePutSchema; open: boolean }) {
   // state
   const [opened, setOpened] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
@@ -35,7 +33,7 @@ export function ExportedChatLink(props: { onClose: () => void, response: Storage
   // in case of 'put' error, just display the message
   if (props.response.type === 'error') {
     return (
-      <GoodModal title='❌ Upload Error' dividers open={props.open} onClose={props.onClose}>
+      <GoodModal title="❌ Upload Error" dividers open={props.open} onClose={props.onClose}>
         <InlineError error={props.response.error} />
       </GoodModal>
     );
@@ -45,7 +43,6 @@ export function ExportedChatLink(props: { onClose: () => void, response: Storage
   const { objectId, deletionKey, expiresAt } = props.response;
   const relativeUrl = getChatLinkRelativePath(objectId);
   const fullUrl = getOriginUrl() + relativeUrl;
-
 
   const onOpen = () => setOpened(true);
 
@@ -63,107 +60,108 @@ export function ExportedChatLink(props: { onClose: () => void, response: Storage
   const onConfirmedDeletion = async () => {
     const result: StorageDeleteSchema = await apiAsyncNode.trade.storageDelete.mutate({ objectId, deletionKey });
     setDeletionResponse(result);
-    if (result.type === 'success')
-      removeChatLinkItem(objectId);
+    if (result.type === 'success') removeChatLinkItem(objectId);
     setConfirmDeletion(false);
   };
 
   const tryDeleted = !!deletionResponse;
   const isDeleted = deletionResponse?.type === 'success';
 
-
   return (
-    <GoodModal title='🔗 Link created' strongerTitle noTitleBar={isDeleted} dividers={!isDeleted} open onClose={props.onClose}>
-
+    <GoodModal title="🔗 Link created" strongerTitle noTitleBar={isDeleted} dividers={!isDeleted} open onClose={props.onClose}>
       {/* Success */}
-      {!tryDeleted && <Card variant='solid' color='primary' invertedColors>
+      {!tryDeleted && (
+        <Card variant="solid" color="primary" invertedColors>
+          <Typography level="title-md">🚀 Ready to share</Typography>
+          <Typography level="body-sm">{fullUrl}</Typography>
 
-        <Typography level='title-md'>
-          🚀 Ready to share
-        </Typography>
-        <Typography level='body-sm'>
-          {fullUrl}
-        </Typography>
-
-        <Stack direction='row' gap={1}>
-          <Tooltip title='Open the link in a new tab'>
-            <Button
-              variant={opened ? 'soft' : 'solid'} onClick={onOpen}
-              color={opened ? 'success' : undefined} endDecorator={opened ? <DoneIcon /> : <LaunchIcon />}
-              component={Link} href={relativeUrl} target='_blank' noLinkStyle
-              sx={{ flexGrow: 1 }}
-            >
-              Open
-            </Button>
-          </Tooltip>
-
-          <Tooltip title='Copy the link to your clipboard'>
-            <Button
-              variant={copied ? 'soft' : 'solid'} onClick={onCopy}
-              color={copied ? 'success' : undefined} endDecorator={copied ? <DoneIcon /> : <LinkIcon />}
-              sx={{ flexGrow: 1 }}
-            >
-              Copy
-            </Button>
-          </Tooltip>
-
-          {webSharePresent() &&
-            <Tooltip title='Share the link using your device'>
+          <Stack direction="row" gap={1}>
+            <Tooltip title="Open the link in a new tab">
               <Button
-                variant={native ? 'soft' : 'solid'} onClick={onNativeShare}
-                color={native ? 'success' : undefined} endDecorator={native ? <DoneIcon /> : <IosShareIcon />}
+                variant={opened ? 'soft' : 'solid'}
+                onClick={onOpen}
+                color={opened ? 'success' : undefined}
+                endDecorator={opened ? <DoneIcon /> : <LaunchIcon />}
+                component={Link}
+                href={relativeUrl}
+                target="_blank"
+                noLinkStyle
                 sx={{ flexGrow: 1 }}
               >
-                Share
+                Open
               </Button>
-            </Tooltip>}
-        </Stack>
+            </Tooltip>
 
-      </Card>}
+            <Tooltip title="Copy the link to your clipboard">
+              <Button
+                variant={copied ? 'soft' : 'solid'}
+                onClick={onCopy}
+                color={copied ? 'success' : undefined}
+                endDecorator={copied ? <DoneIcon /> : <LinkIcon />}
+                sx={{ flexGrow: 1 }}
+              >
+                Copy
+              </Button>
+            </Tooltip>
+
+            {webSharePresent() && (
+              <Tooltip title="Share the link using your device">
+                <Button
+                  variant={native ? 'soft' : 'solid'}
+                  onClick={onNativeShare}
+                  color={native ? 'success' : undefined}
+                  endDecorator={native ? <DoneIcon /> : <IosShareIcon />}
+                  sx={{ flexGrow: 1 }}
+                >
+                  Share
+                </Button>
+              </Tooltip>
+            )}
+          </Stack>
+        </Card>
+      )}
 
       {/* Deleted */}
-      {isDeleted && <Card variant='solid' color='danger' invertedColors>
-        <Typography level='title-md'>
-          🗑️ Link deleted
-        </Typography>
-        <Typography level='body-sm'>
-          This link has been deleted
-        </Typography>
-      </Card>}
+      {isDeleted && (
+        <Card variant="solid" color="danger" invertedColors>
+          <Typography level="title-md">🗑️ Link deleted</Typography>
+          <Typography level="body-sm">This link has been deleted</Typography>
+        </Card>
+      )}
 
       {/* Deletion and Expiration */}
-      {!isDeleted && <Card variant='soft'>
+      {!isDeleted && (
+        <Card variant="soft">
+          <Typography level="title-sm">Deletion Key</Typography>
 
-        <Typography level='title-sm'>
-          Deletion Key
-        </Typography>
+          <Input readOnly variant="plain" value={deletionKey} sx={{ flexGrow: 1 }} />
 
-        <Input readOnly variant='plain' value={deletionKey} sx={{ flexGrow: 1 }} />
+          <Typography level="body-sm">
+            IMPORTANT - <b>keep this key safe</b>, you will need it if you decide to delete the link at a later time, and it will not appear again once you
+            close this dialog.
+          </Typography>
 
-        <Typography level='body-sm'>
-          IMPORTANT - <b>keep this key safe</b>, you will need it if you decide to delete the link at a later time,
-          and it will not appear again once you close this dialog.
-        </Typography>
-
-        <Stack direction='row' gap={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-          {!!expiresAt && (
-            <Typography level='title-sm'>
-              This chat will auto-expire <TimeAgo date={expiresAt} />.
-            </Typography>
-          )}
-          <Button variant='outlined' color='neutral' endDecorator={<DeleteForeverIcon />} onClick={onDeleteNow}>
-            Delete Now
-          </Button>
-        </Stack>
-
-      </Card>}
+          <Stack direction="row" gap={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            {!!expiresAt && (
+              <Typography level="title-sm">
+                This chat will auto-expire <TimeAgo date={expiresAt} />.
+              </Typography>
+            )}
+            <Button variant="outlined" color="neutral" endDecorator={<DeleteForeverIcon />} onClick={onDeleteNow}>
+              Delete Now
+            </Button>
+          </Stack>
+        </Card>
+      )}
 
       {/* Delete confirmation */}
       <ConfirmationModal
-        open={confirmDeletion} onClose={onDeleteCancelled} onPositive={onConfirmedDeletion}
-        confirmationText={'Are you sure you want to delete this link?'} positiveActionText={'Yes, Delete'}
+        open={confirmDeletion}
+        onClose={onDeleteCancelled}
+        onPositive={onConfirmedDeletion}
+        confirmationText={'Are you sure you want to delete this link?'}
+        positiveActionText={'Yes, Delete'}
       />
-
     </GoodModal>
   );
 }

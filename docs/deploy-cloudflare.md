@@ -7,9 +7,10 @@
 >
 > Workaround: Step 3.4. has been added below, to DELETE the NodeJS traditional runtime - which means that some
 > parts of this application will not work.
->  - [Side effects](https://github.com/enricoros/big-agi/blob/main/src/apps/chat/trade/server/trade.router.ts#L19):
-     > Sharing functionality to DB, and import from ChatGPT share, and post to Paste.GG will not work
->  - See [Issue 174](https://github.com/enricoros/big-agi/issues/174).
+>
+> - [Side effects](https://github.com/enricoros/big-agi/blob/main/src/apps/chat/trade/server/trade.router.ts#L19):
+>   Sharing functionality to DB, and import from ChatGPT share, and post to Paste.GG will not work
+> - See [Issue 174](https://github.com/enricoros/big-agi/issues/174).
 >
 > Longer term: follow [prisma/prisma: Support Edge Function deployments](https://github.com/prisma/prisma/issues/21394)
 > and convert the Node runtime to Edge runtime once Prisma supports it.
@@ -34,8 +35,8 @@ Fork the repository to your personal GitHub account.
 2. On this page, set your **Project name**, **Production branch** (e.g., main), and your Build settings
 3. Choose `Next.js` from the **Framework preset** dropdown menu
 4. Set a custom **Build Command**:
-    - `rm app/api/trpc-node/[trpc]/route.ts && npx @cloudflare/next-on-pages@1`
-    - see the tradeoffs for this deletion on the notice at the top
+   - `rm app/api/trpc-node/[trpc]/route.ts && npx @cloudflare/next-on-pages@1`
+   - see the tradeoffs for this deletion on the notice at the top
 5. Keep the **Build output directory** as default
 6. Click the **Save and Deploy** button
 

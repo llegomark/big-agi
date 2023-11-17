@@ -27,12 +27,9 @@ import { runAssistantUpdatingState } from './editors/chat-stream';
 import { runImageGenerationUpdatingState } from './editors/image-generate';
 import { runReActUpdatingState } from './editors/react-tangent';
 
-
 const SPECIAL_ID_ALL_CHATS = 'all-chats';
 
-
 export function AppChat() {
-
   // state
   const [isMessageSelectionMode, setIsMessageSelectionMode] = React.useState(false);
   const [diagramConfig, setDiagramConfig] = React.useState<DiagramConfig | null>(null);
@@ -43,8 +40,18 @@ export function AppChat() {
   const composerTextAreaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // external state
-  const { activeConversationId, isConversationEmpty, hasAnyContent, newConversation, duplicateConversation, deleteAllConversations, setMessages, systemPurposeId, setAutoTitle } = useChatStore(state => {
-    const conversation = state.conversations.find(conversation => conversation.id === state.activeConversationId);
+  const {
+    activeConversationId,
+    isConversationEmpty,
+    hasAnyContent,
+    newConversation,
+    duplicateConversation,
+    deleteAllConversations,
+    setMessages,
+    systemPurposeId,
+    setAutoTitle,
+  } = useChatStore((state) => {
+    const conversation = state.conversations.find((conversation) => conversation.id === state.activeConversationId);
     const isConversationEmpty = conversation ? !conversation.messages.length : true;
     const hasAnyContent = state.conversations.length > 1 || !isConversationEmpty;
     return {
@@ -59,7 +66,6 @@ export function AppChat() {
       setAutoTitle: state.setAutoTitle,
     };
   }, shallow);
-
 
   const handleExecuteConversation = async (chatModeId: ChatModeId, conversationId: string, history: DMessage[]) => {
     const { chatLLMId } = useModelsStore.getState();
@@ -97,21 +103,24 @@ export function AppChat() {
         case 'write-user':
           return setMessages(conversationId, history);
         case 'react':
-          if (!lastMessage?.text)
-            break;
+          if (!lastMessage?.text) break;
           setMessages(conversationId, history);
           return await runReActUpdatingState(conversationId, lastMessage.text, chatLLMId);
         case 'draw-imagine':
         case 'draw-imagine-plus':
-          if (!lastMessage?.text)
-            break;
-          const imagePrompt = chatModeId == 'draw-imagine-plus'
-            ? await imaginePromptFromText(lastMessage.text) || 'An error sign.'
-            : lastMessage.text;
-          setMessages(conversationId, history.map(message => message.id !== lastMessage.id ? message : {
-            ...message,
-            text: `${CmdRunProdia[0]} ${imagePrompt}`,
-          }));
+          if (!lastMessage?.text) break;
+          const imagePrompt = chatModeId == 'draw-imagine-plus' ? (await imaginePromptFromText(lastMessage.text)) || 'An error sign.' : lastMessage.text;
+          setMessages(
+            conversationId,
+            history.map((message) =>
+              message.id !== lastMessage.id
+                ? message
+                : {
+                    ...message,
+                    text: `${CmdRunProdia[0]} ${imagePrompt}`,
+                  },
+            ),
+          );
           return await runImageGenerationUpdatingState(conversationId, imagePrompt);
       }
     }
@@ -122,10 +131,9 @@ export function AppChat() {
   };
 
   const _findConversation = (conversationId: string) =>
-    conversationId ? useChatStore.getState().conversations.find(c => c.id === conversationId) ?? null : null;
+    conversationId ? useChatStore.getState().conversations.find((c) => c.id === conversationId) ?? null : null;
 
-  const handleExecuteChatHistory = async (conversationId: string, history: DMessage[]) =>
-    await handleExecuteConversation('immediate', conversationId, history);
+  const handleExecuteChatHistory = async (conversationId: string, history: DMessage[]) => await handleExecuteConversation('immediate', conversationId, history);
 
   const handleDiagramFromText = async (diagramConfig: DiagramConfig | null) => setDiagramConfig(diagramConfig);
 
@@ -137,8 +145,7 @@ export function AppChat() {
 
   const handleComposerNewMessage = async (chatModeId: ChatModeId, conversationId: string, userText: string) => {
     const conversation = _findConversation(conversationId);
-    if (conversation)
-      return await handleExecuteConversation(chatModeId, conversationId, [...conversation.messages, createDMessage('user', userText)]);
+    if (conversation) return await handleExecuteConversation(chatModeId, conversationId, [...conversation.messages, createDMessage('user', userText)]);
   };
 
   const handleRegenerateAssistant = async () => {
@@ -154,13 +161,11 @@ export function AppChat() {
   };
   useGlobalShortcut('r', true, true, false, handleRegenerateAssistant);
 
-
   const handleImportConversation = () => setTradeConfig({ dir: 'import' });
 
   const handleExportConversation = (conversationId: string | null) => setTradeConfig({ dir: 'export', conversationId });
 
   const handleFlattenConversation = (conversationId: string) => setFlattenConversationId(conversationId);
-
 
   useGlobalShortcut('n', true, false, true, () => {
     newConversation();
@@ -184,107 +189,122 @@ export function AppChat() {
     if (deleteConfirmationId) {
       if (deleteConfirmationId === SPECIAL_ID_ALL_CHATS) {
         deleteAllConversations();
-      }// else
+      } // else
       //  deleteConversation(deleteConfirmationId);
       setDeleteConfirmationId(null);
     }
   };
 
-
   // Pluggable ApplicationBar components
 
-  const centerItems = React.useMemo(() =>
-      <ChatDropdowns conversationId={activeConversationId} />,
-    [activeConversationId],
-  );
+  const centerItems = React.useMemo(() => <ChatDropdowns conversationId={activeConversationId} />, [activeConversationId]);
 
-  const drawerItems = React.useMemo(() =>
+  const drawerItems = React.useMemo(
+    () => (
       <ChatDrawerItems
         conversationId={activeConversationId}
         onImportConversation={handleImportConversation}
         onDeleteAllConversations={handleDeleteAllConversations}
-      />,
+      />
+    ),
     [activeConversationId],
   );
 
-  const menuItems = React.useMemo(() =>
+  const menuItems = React.useMemo(
+    () => (
       <ChatMenuItems
-        conversationId={activeConversationId} isConversationEmpty={isConversationEmpty} hasConversations={hasAnyContent}
-        isMessageSelectionMode={isMessageSelectionMode} setIsMessageSelectionMode={setIsMessageSelectionMode}
+        conversationId={activeConversationId}
+        isConversationEmpty={isConversationEmpty}
+        hasConversations={hasAnyContent}
+        isMessageSelectionMode={isMessageSelectionMode}
+        setIsMessageSelectionMode={setIsMessageSelectionMode}
         onClearConversation={handleClearConversation}
         onDuplicateConversation={duplicateConversation}
         onExportConversation={handleExportConversation}
         onFlattenConversation={handleFlattenConversation}
-      />,
+      />
+    ),
     [activeConversationId, duplicateConversation, hasAnyContent, isConversationEmpty, isMessageSelectionMode],
   );
 
   useLayoutPluggable(centerItems, drawerItems, menuItems);
 
-  return <>
+  return (
+    <>
+      <ChatMessageList
+        conversationId={activeConversationId}
+        isMessageSelectionMode={isMessageSelectionMode}
+        setIsMessageSelectionMode={setIsMessageSelectionMode}
+        onExecuteChatHistory={handleExecuteChatHistory}
+        onDiagramFromText={handleDiagramFromText}
+        onImagineFromText={handleImagineFromText}
+        sx={{
+          flexGrow: 1,
+          backgroundColor: 'background.level1',
+          overflowY: 'auto', // overflowY: 'hidden'
+          minHeight: 96,
+        }}
+      />
 
-    <ChatMessageList
-      conversationId={activeConversationId}
-      isMessageSelectionMode={isMessageSelectionMode} setIsMessageSelectionMode={setIsMessageSelectionMode}
-      onExecuteChatHistory={handleExecuteChatHistory}
-      onDiagramFromText={handleDiagramFromText}
-      onImagineFromText={handleImagineFromText}
-      sx={{
-        flexGrow: 1,
-        backgroundColor: 'background.level1',
-        overflowY: 'auto', // overflowY: 'hidden'
-        minHeight: 96,
-      }} />
+      <Ephemerals
+        conversationId={activeConversationId}
+        sx={{
+          // flexGrow: 0.1,
+          flexShrink: 0.5,
+          overflowY: 'auto',
+          minHeight: 64,
+        }}
+      />
 
-    <Ephemerals
-      conversationId={activeConversationId}
-      sx={{
-        // flexGrow: 0.1,
-        flexShrink: 0.5,
-        overflowY: 'auto',
-        minHeight: 64,
-      }} />
+      <Composer
+        conversationId={activeConversationId}
+        messageId={null}
+        isDeveloperMode={systemPurposeId === 'Developer'}
+        composerTextAreaRef={composerTextAreaRef}
+        onNewMessage={handleComposerNewMessage}
+        sx={{
+          zIndex: 21, // position: 'sticky', bottom: 0,
+          backgroundColor: 'background.surface',
+          borderTop: `1px solid`,
+          borderTopColor: 'divider',
+          p: { xs: 1, md: 2 },
+        }}
+      />
 
-    <Composer
-      conversationId={activeConversationId} messageId={null}
-      isDeveloperMode={systemPurposeId === 'Developer'}
-      composerTextAreaRef={composerTextAreaRef}
-      onNewMessage={handleComposerNewMessage}
-      sx={{
-        zIndex: 21, // position: 'sticky', bottom: 0,
-        backgroundColor: 'background.surface',
-        borderTop: `1px solid`,
-        borderTopColor: 'divider',
-        p: { xs: 1, md: 2 },
-      }} />
+      {/* Diagrams */}
+      {!!diagramConfig && <DiagramsModal config={diagramConfig} onClose={() => setDiagramConfig(null)} />}
 
+      {/* Flatten */}
+      {!!flattenConversationId && <FlattenerModal conversationId={flattenConversationId} onClose={() => setFlattenConversationId(null)} />}
 
-    {/* Diagrams */}
-    {!!diagramConfig && <DiagramsModal config={diagramConfig} onClose={() => setDiagramConfig(null)} />}
+      {/* Import / Export  */}
+      {!!tradeConfig && <TradeModal config={tradeConfig} onClose={() => setTradeConfig(null)} />}
 
-    {/* Flatten */}
-    {!!flattenConversationId && <FlattenerModal conversationId={flattenConversationId} onClose={() => setFlattenConversationId(null)} />}
+      {/* [confirmation] Reset Conversation */}
+      {!!clearConfirmationId && (
+        <ConfirmationModal
+          open
+          onClose={() => setClearConfirmationId(null)}
+          onPositive={handleConfirmedClearConversation}
+          confirmationText={'Are you sure you want to discard all the messages?'}
+          positiveActionText={'Clear conversation'}
+        />
+      )}
 
-    {/* Import / Export  */}
-    {!!tradeConfig && <TradeModal config={tradeConfig} onClose={() => setTradeConfig(null)} />}
-
-
-    {/* [confirmation] Reset Conversation */}
-    {!!clearConfirmationId && <ConfirmationModal
-      open onClose={() => setClearConfirmationId(null)} onPositive={handleConfirmedClearConversation}
-      confirmationText={'Are you sure you want to discard all the messages?'} positiveActionText={'Clear conversation'}
-    />}
-
-    {/* [confirmation] Delete All */}
-    {!!deleteConfirmationId && <ConfirmationModal
-      open onClose={() => setDeleteConfirmationId(null)} onPositive={handleConfirmedDeleteConversation}
-      confirmationText={deleteConfirmationId === SPECIAL_ID_ALL_CHATS
-        ? 'Are you absolutely sure you want to delete ALL conversations? This action cannot be undone.'
-        : 'Are you sure you want to delete this conversation?'}
-      positiveActionText={deleteConfirmationId === SPECIAL_ID_ALL_CHATS
-        ? 'Yes, delete all'
-        : 'Delete conversation'}
-    />}
-
-  </>;
+      {/* [confirmation] Delete All */}
+      {!!deleteConfirmationId && (
+        <ConfirmationModal
+          open
+          onClose={() => setDeleteConfirmationId(null)}
+          onPositive={handleConfirmedDeleteConversation}
+          confirmationText={
+            deleteConfirmationId === SPECIAL_ID_ALL_CHATS
+              ? 'Are you absolutely sure you want to delete ALL conversations? This action cannot be undone.'
+              : 'Are you sure you want to delete this conversation?'
+          }
+          positiveActionText={deleteConfirmationId === SPECIAL_ID_ALL_CHATS ? 'Yes, delete all' : 'Delete conversation'}
+        />
+      )}
+    </>
+  );
 }

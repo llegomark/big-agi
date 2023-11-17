@@ -10,7 +10,6 @@ export const isMacUser = /Macintosh|MacIntel|MacPPC|Mac68K/.test(safeUA);
 export const isChromeDesktop = safeUA.indexOf('Chrome') > -1 && safeUA.indexOf('Mobile') === -1;
 export const isFirefox = safeUA.indexOf('Firefox') > -1;
 
-
 /**
  * Returns 'true' if the application is been executed as a 'pwa' (e.g. installed, stand-alone)
  */
@@ -24,7 +23,8 @@ export function webSharePresent(): boolean {
 
 export function webShare(title: string, text: string, url: string, onShared?: () => void): void {
   if (isBrowser && navigator.share)
-    navigator.share({ title, text, url })
+    navigator
+      .share({ title, text, url })
       .then(() => onShared?.())
       .catch((error) => console.log('Error sharing', error));
 }
@@ -35,7 +35,6 @@ function clientHostName(): string {
 
 export function clientUtmSource(campaign?: string): string {
   const host = clientHostName();
-  if (!host)
-    return '';
+  if (!host) return '';
   return '?utm_source=' + host + '&utm_medium=' + Brand.Title.Base.toLowerCase() + (campaign ? `&utm_campaign=${campaign}` : '');
 }

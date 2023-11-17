@@ -4,7 +4,6 @@ import { AppCall } from '../src/apps/call/AppCall';
 
 import { AppLayout } from '~/common/layout/AppLayout';
 
-
 export default function CallPage() {
   return (
     <AppLayout>

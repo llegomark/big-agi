@@ -6,9 +6,7 @@ import { SxProps } from '@mui/joy/styles/types';
 
 import { DiffBlock } from './blocks';
 
-
-export const RenderTextDiff = ({ diffBlock, sx }: { diffBlock: DiffBlock; sx?: SxProps; }) => {
-
+export const RenderTextDiff = ({ diffBlock, sx }: { diffBlock: DiffBlock; sx?: SxProps }) => {
   // external state
   const theme = useTheme();
 
@@ -20,14 +18,16 @@ export const RenderTextDiff = ({ diffBlock, sx }: { diffBlock: DiffBlock; sx?: S
     // backgroundColor: theme.vars.palette.success.softBg,
     backgroundColor: `rgba(${theme.palette.mode === 'light' ? theme.vars.palette.success.lightChannel : theme.vars.palette.success.darkChannel} / 1)`,
     color: theme.vars.palette.success.softColor,
-    padding: '0.1rem 0.1rem', margin: '0 -0.1rem',
+    padding: '0.1rem 0.1rem',
+    margin: '0 -0.1rem',
   };
 
   // text removed (strike-through)
   const styleSub = {
     backgroundColor: `rgba(${theme.vars.palette.danger.darkChannel} / 0.05)`,
     color: theme.vars.palette.danger.plainColor,
-    padding: '0 0.25rem', margin: '0 -0.25rem',
+    padding: '0 0.25rem',
+    margin: '0 -0.25rem',
     textDecoration: 'line-through',
   };
 
@@ -48,8 +48,11 @@ export const RenderTextDiff = ({ diffBlock, sx }: { diffBlock: DiffBlock; sx?: S
         zIndex: 200,
       }}
     >
-      {textDiffs.map(([op, text], index) =>
-        <Box component='span' key={'diff-' + index} sx={op === DIFF_DELETE ? styleSub : op === DIFF_INSERT ? styleAdd : styleUnchanged}>{text}</Box>)}
+      {textDiffs.map(([op, text], index) => (
+        <Box component="span" key={'diff-' + index} sx={op === DIFF_DELETE ? styleSub : op === DIFF_INSERT ? styleAdd : styleUnchanged}>
+          {text}
+        </Box>
+      ))}
     </Typography>
   );
 };

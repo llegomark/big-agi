@@ -8,40 +8,42 @@ import { closeLayoutPreferences } from '~/common/layout/store-applayout';
 import { navigateToLabs } from '~/common/app.routes';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 
-
 export function UxLabsSettings() {
   // external state
-  const {
-    experimentalLabs, setExperimentalLabs,
-  } = useUIPreferencesStore(state => ({
-    experimentalLabs: state.experimentalLabs, setExperimentalLabs: state.setExperimentalLabs,
-  }), shallow);
+  const { experimentalLabs, setExperimentalLabs } = useUIPreferencesStore(
+    (state) => ({
+      experimentalLabs: state.experimentalLabs,
+      setExperimentalLabs: state.setExperimentalLabs,
+    }),
+    shallow,
+  );
 
   const handleExperimentalLabsChange = (event: React.ChangeEvent<HTMLInputElement>) => setExperimentalLabs(event.target.checked);
 
+  return (
+    <>
+      <FormControl orientation="horizontal" sx={{ justifyContent: 'space-between' }}>
+        <FormLabelStart title="Experiments" description={experimentalLabs ? 'Enabled' : 'Disabled'} />
+        <Switch
+          checked={experimentalLabs}
+          onChange={handleExperimentalLabsChange}
+          endDecorator={experimentalLabs ? 'On' : 'Off'}
+          slotProps={{ endDecorator: { sx: { minWidth: 26 } } }}
+        />
+      </FormControl>
 
-  return <>
-
-    <FormControl orientation='horizontal' sx={{ justifyContent: 'space-between' }}>
-      <FormLabelStart title='Experiments'
-                      description={experimentalLabs ? 'Enabled' : 'Disabled'} />
-      <Switch checked={experimentalLabs} onChange={handleExperimentalLabsChange}
-              endDecorator={experimentalLabs ? 'On' : 'Off'}
-              slotProps={{ endDecorator: { sx: { minWidth: 26 } } }} />
-    </FormControl>
-
-    <FormControl orientation='horizontal' sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-      <div />
-      <Button
-        variant='soft'
-        onClick={() => {
-          closeLayoutPreferences();
-          void navigateToLabs();
-        }}
-      >
-        👉 See Experiments
-      </Button>
-    </FormControl>
-
-  </>;
+      <FormControl orientation="horizontal" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <div />
+        <Button
+          variant="soft"
+          onClick={() => {
+            closeLayoutPreferences();
+            void navigateToLabs();
+          }}
+        >
+          👉 See Experiments
+        </Button>
+      </FormControl>
+    </>
+  );
 }

@@ -35,13 +35,14 @@ The development of big-AGI is an open book: our **[public roadmap](https://githu
 
 ## 💖 Support
 
-[//]: # ([![Official Discord]&#40;https://img.shields.io/discord/1098796266906980422?label=discord&logo=discord&logoColor=%23fff&style=for-the-badge&#41;]&#40;https://discord.gg/MkH4qj2Jp9&#41;)
+[//]: # '[![Official Discord](https://img.shields.io/discord/1098796266906980422?label=discord&logo=discord&logoColor=%23fff&style=for-the-badge)](https://discord.gg/MkH4qj2Jp9)'
+
 [![Official Discord](https://discordapp.com/api/guilds/1098796266906980422/widget.png?style=banner2)](https://discord.gg/MkH4qj2Jp9)
 
-* Enjoy the hosted open-source app on [big-AGI.com](https://big-agi.com)
-* [Chat with us](https://discord.gg/MkH4qj2Jp9)
-* Deploy your [fork](https://github.com/enricoros/big-agi/fork) for your friends and family
-* send PRs! ...
+- Enjoy the hosted open-source app on [big-AGI.com](https://big-agi.com)
+- [Chat with us](https://discord.gg/MkH4qj2Jp9)
+- Deploy your [fork](https://github.com/enricoros/big-agi/fork) for your friends and family
+- send PRs! ...
   🎭[Editing Personas](https://github.com/enricoros/big-agi/issues/35),
   🧩[Reasoning Systems](https://github.com/enricoros/big-agi/issues/36),
   🌐[Community Templates](https://github.com/enricoros/big-agi/issues/35),
@@ -123,7 +124,7 @@ The development of big-AGI is an open book: our **[public roadmap](https://githu
 - **Context** - Attach or [Drag & Drop files](docs/pixels/feature_drop_target.png) to add them to the prompt 📁
 - **Syntax highlighting** - for multiple languages 🌈
 - **Code Execution: Sandpack** -
-  [now on branch]((https://github.com/enricoros/big-agi/commit/f678a0d463d5e9cf0733f577e11bd612b7902d89)) `variant-code-execution`
+  [now on branch](<(https://github.com/enricoros/big-agi/commit/f678a0d463d5e9cf0733f577e11bd612b7902d89)>) `variant-code-execution`
 - Chat with GPT-4 and 3.5 Turbo 🧠💨
 - Real-time streaming of AI responses ⚡
 - **Voice Input** 🎙️ - works great on Chrome / Windows
@@ -152,11 +153,11 @@ The app will be running on `http://localhost:3000`
 
 Integrations:
 
-* Local models: Ollama, Oobabooga, LocalAi, etc.
-* [ElevenLabs](https://elevenlabs.io/) Voice Synthesis (bring your own voice too) - Settings > Text To Speech
-* [Helicone](https://www.helicone.ai/) LLM Observability Platform - Models > OpenAI > Advanced > API Host: 'oai.hconeai.com'
-* [Paste.gg](https://paste.gg/) Paste Sharing - Chat Menu > Share via paste.gg
-* [Prodia](https://prodia.com/) Image Generation - Settings > Image Generation > Api Key & Model
+- Local models: Ollama, Oobabooga, LocalAi, etc.
+- [ElevenLabs](https://elevenlabs.io/) Voice Synthesis (bring your own voice too) - Settings > Text To Speech
+- [Helicone](https://www.helicone.ai/) LLM Observability Platform - Models > OpenAI > Advanced > API Host: 'oai.hconeai.com'
+- [Paste.gg](https://paste.gg/) Paste Sharing - Chat Menu > Share via paste.gg
+- [Prodia](https://prodia.com/) Image Generation - Settings > Image Generation > Api Key & Model
 
 ## 🐳 Deploy with Docker
 
@@ -167,7 +168,7 @@ Build and run:
 ```bash
 docker build -t big-agi .
 docker run -d -p 3000:3000 big-agi
-``` 
+```
 
 Or run the official container:
 
@@ -184,8 +185,6 @@ Create your GitHub fork, create a Vercel project over that fork, and deploy it. 
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-agi&env=OPENAI_API_KEY,OPENAI_API_HOST&envDescription=OpenAI%20KEY%20for%20your%20deployment.%20Set%20HOST%20only%20if%20non-default.)
 
-
-
 <br/>
 
 This project is licensed under the MIT License.
@@ -195,6 +194,6 @@ This project is licensed under the MIT License.
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/enricoros/big-agi)](https://github.com/enricoros/big-agi/pulls)
 [![License](https://img.shields.io/github/license/enricoros/big-agi)](https://github.com/enricoros/big-agi/LICENSE)
 
-[//]: # ([![GitHub issues]&#40;https://img.shields.io/github/issues/enricoros/big-agi&#41;]&#40;https://github.com/enricoros/big-agi/issues&#41;)
+[//]: # '[![GitHub issues](https://img.shields.io/github/issues/enricoros/big-agi)](https://github.com/enricoros/big-agi/issues)'
 
 Made with 💙

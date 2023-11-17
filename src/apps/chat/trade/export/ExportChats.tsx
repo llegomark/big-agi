@@ -24,30 +24,25 @@ import { conversationToJsonV1, conversationToMarkdown, downloadAllConversationsJ
 import { ExportedChatLink } from './ExportedChatLink';
 import { ExportedPublish } from './ExportedPublish';
 
-
-export type ExportConfig = { dir: 'export', conversationId: string | null };
+export type ExportConfig = { dir: 'export'; conversationId: string | null };
 
 /// Returns a pretty link to the current page, for promo
 function linkToOrigin() {
   let origin = isBrowser ? window.location.href : '';
-  if (!origin || origin.includes('//localhost'))
-    origin = Brand.URIs.OpenRepo;
+  if (!origin || origin.includes('//localhost')) origin = Brand.URIs.OpenRepo;
   origin = origin.replace('https://', '');
-  if (origin.endsWith('/'))
-    origin = origin.slice(0, -1);
+  if (origin.endsWith('/')) origin = origin.slice(0, -1);
   return origin;
 }
 
 function findConversation(conversationId: string) {
-  return conversationId ? useChatStore.getState().conversations.find(c => c.id === conversationId) ?? null : null;
+  return conversationId ? useChatStore.getState().conversations.find((c) => c.id === conversationId) ?? null : null;
 }
-
 
 /**
  * Export Buttons and functionality
  */
-export function ExportChats(props: { config: ExportConfig, onClose: () => void }) {
-
+export function ExportChats(props: { config: ExportConfig; onClose: () => void }) {
   // state
   const [downloadedState, setDownloadedState] = React.useState<'ok' | 'fail' | null>(null);
   const [downloadedAllState, setDownloadedAllState] = React.useState<'ok' | 'fail' | null>(null);
@@ -62,7 +57,6 @@ export function ExportChats(props: { config: ExportConfig, onClose: () => void }
   const enableSharing = backendCaps().hasDB;
   const { novel: chatLinkBadge, touch: clearChatLinkBadge } = useUICounter('share-chat-link');
   const { linkStorageOwnerId, setLinkStorageOwnerId } = useLinkStorageOwnerId();
-
 
   // chat link
 
@@ -88,8 +82,7 @@ export function ExportChats(props: { config: ExportConfig, onClose: () => void }
       setChatLinkResponse(response);
       if (response.type === 'success') {
         addChatLinkItem(chatTitle, response.objectId, response.createdAt, response.expiresAt, response.deletionKey);
-        if (!linkStorageOwnerId)
-          setLinkStorageOwnerId(response.ownerId);
+        if (!linkStorageOwnerId) setLinkStorageOwnerId(response.ownerId);
       }
       clearChatLinkBadge();
     } catch (error: any) {
@@ -100,7 +93,6 @@ export function ExportChats(props: { config: ExportConfig, onClose: () => void }
     }
     setChatLinkUploading(false);
   };
-
 
   // publish
 
@@ -136,7 +128,6 @@ export function ExportChats(props: { config: ExportConfig, onClose: () => void }
     props.onClose();
   };
 
-
   // download
 
   const handleDownloadConversation = () => {
@@ -154,100 +145,117 @@ export function ExportChats(props: { config: ExportConfig, onClose: () => void }
       .catch(() => setDownloadedAllState('fail'));
   };
 
-
   const hasConversation = !!props.config.conversationId;
 
-  return <>
+  return (
+    <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', py: 1 }}>
+        <Typography level="body-sm">Share or download this conversation</Typography>
 
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', py: 1 }}>
-      <Typography level='body-sm'>
-        Share or download this conversation
-      </Typography>
+        {enableSharing && (
+          <Badge color="danger" invisible={!chatLinkBadge}>
+            <Button
+              variant="soft"
+              disabled={!hasConversation || chatLinkUploading}
+              loading={chatLinkUploading}
+              color={chatLinkResponse ? 'success' : 'primary'}
+              endDecorator={chatLinkResponse ? <DoneIcon /> : <IosShareIcon />}
+              sx={{ minWidth: 240, justifyContent: 'space-between' }}
+              onClick={handleChatLinkCreate}
+            >
+              Share on {Brand.Title.Base}
+            </Button>
+          </Badge>
+        )}
 
-      {enableSharing && (
-        <Badge color='danger' invisible={!chatLinkBadge}>
-          <Button variant='soft' disabled={!hasConversation || chatLinkUploading}
-                  loading={chatLinkUploading}
-                  color={chatLinkResponse ? 'success' : 'primary'}
-                  endDecorator={chatLinkResponse ? <DoneIcon /> : <IosShareIcon />}
-                  sx={{ minWidth: 240, justifyContent: 'space-between' }}
-                  onClick={handleChatLinkCreate}>
-            Share on {Brand.Title.Base}
-          </Button>
-        </Badge>
+        <Button
+          variant="soft"
+          disabled={!hasConversation || publishUploading}
+          loading={publishUploading}
+          color={publishResponse ? 'success' : 'primary'}
+          endDecorator={<ExitToAppIcon />}
+          sx={{ minWidth: 240, justifyContent: 'space-between' }}
+          onClick={handlePublishConversation}
+        >
+          Publish to Paste.gg
+        </Button>
+
+        {/*<Button variant='soft' size='md' disabled sx={{ minWidth: 240, justifyContent: 'space-between', fontWeight: 400 }}>*/}
+        {/*  Publish to ShareGPT*/}
+        {/*</Button>*/}
+
+        <Button
+          variant="soft"
+          disabled={!hasConversation}
+          color={downloadedState === 'ok' ? 'success' : downloadedState === 'fail' ? 'warning' : 'primary'}
+          endDecorator={downloadedState === 'ok' ? <DoneIcon /> : downloadedState === 'fail' ? '✘' : <FileDownloadIcon />}
+          sx={{ minWidth: 240, justifyContent: 'space-between' }}
+          onClick={handleDownloadConversation}
+        >
+          Download chat
+        </Button>
+
+        <Typography level="body-sm" sx={{ mt: 2 }}>
+          Store or transfer between devices
+        </Typography>
+        <Button
+          variant="soft"
+          size="md"
+          color={downloadedAllState === 'ok' ? 'success' : downloadedAllState === 'fail' ? 'warning' : 'primary'}
+          endDecorator={downloadedAllState === 'ok' ? <DoneIcon /> : downloadedAllState === 'fail' ? '✘' : <FileDownloadIcon />}
+          sx={{ minWidth: 240, justifyContent: 'space-between' }}
+          onClick={handleDownloadAllConversations}
+        >
+          Download all chats
+        </Button>
+      </Box>
+
+      {/* [chat link] confirmation */}
+      {enableSharing && !!chatLinkConfirmId && (
+        <ConfirmationModal
+          open
+          onClose={() => setChatLinkConfirmId(null)}
+          onPositive={handleChatLinkConfirmed}
+          title="Upload Confirmation"
+          confirmationText={
+            <>
+              Everyone who has the unlisted link will be able to access this chat. It will be automatically deleted after 30 days. For more information, please
+              see the{' '}
+              <Link href={Brand.URIs.PrivacyPolicy} target="_blank">
+                privacy policy
+              </Link>{' '}
+              of this server. <br />
+              Do you wish to continue?
+            </>
+          }
+          positiveActionText={'Yes, Create Link'}
+        />
       )}
 
-      <Button variant='soft' disabled={!hasConversation || publishUploading}
-              loading={publishUploading}
-              color={publishResponse ? 'success' : 'primary'}
-              endDecorator={<ExitToAppIcon />}
-              sx={{ minWidth: 240, justifyContent: 'space-between' }}
-              onClick={handlePublishConversation}>
-        Publish to Paste.gg
-      </Button>
+      {/* [chat link] response */}
+      {enableSharing && !!chatLinkResponse && <ExportedChatLink open onClose={() => setChatLinkResponse(null)} response={chatLinkResponse} />}
 
-      {/*<Button variant='soft' size='md' disabled sx={{ minWidth: 240, justifyContent: 'space-between', fontWeight: 400 }}>*/}
-      {/*  Publish to ShareGPT*/}
-      {/*</Button>*/}
+      {/* [publish] confirmation */}
+      {publishConversationId && (
+        <ConfirmationModal
+          open
+          onClose={() => setPublishConversationId(null)}
+          onPositive={handlePublishConfirmed}
+          confirmationText={
+            <>
+              Share your conversation anonymously on{' '}
+              <Link href="https://paste.gg" target="_blank">
+                paste.gg
+              </Link>
+              ? It will be unlisted and available to share and read for 30 days. Keep in mind, deletion may not be possible. Do you wish to continue?
+            </>
+          }
+          positiveActionText={'Understood, Upload to Paste.gg'}
+        />
+      )}
 
-      <Button variant='soft' disabled={!hasConversation}
-              color={downloadedState === 'ok' ? 'success' : downloadedState === 'fail' ? 'warning' : 'primary'}
-              endDecorator={downloadedState === 'ok' ? <DoneIcon /> : downloadedState === 'fail' ? '✘' : <FileDownloadIcon />}
-              sx={{ minWidth: 240, justifyContent: 'space-between' }}
-              onClick={handleDownloadConversation}>
-        Download chat
-      </Button>
-
-      <Typography level='body-sm' sx={{ mt: 2 }}>
-        Store or transfer between devices
-      </Typography>
-      <Button variant='soft' size='md'
-              color={downloadedAllState === 'ok' ? 'success' : downloadedAllState === 'fail' ? 'warning' : 'primary'}
-              endDecorator={downloadedAllState === 'ok' ? <DoneIcon /> : downloadedAllState === 'fail' ? '✘' : <FileDownloadIcon />}
-              sx={{ minWidth: 240, justifyContent: 'space-between' }}
-              onClick={handleDownloadAllConversations}>
-        Download all chats
-      </Button>
-    </Box>
-
-
-    {/* [chat link] confirmation */}
-    {enableSharing && !!chatLinkConfirmId && (
-      <ConfirmationModal
-        open onClose={() => setChatLinkConfirmId(null)} onPositive={handleChatLinkConfirmed}
-        title='Upload Confirmation'
-        confirmationText={<>
-          Everyone who has the unlisted link will be able to access this chat.
-          It will be automatically deleted after 30 days.
-          For more information, please see the <Link href={Brand.URIs.PrivacyPolicy} target='_blank'>privacy
-          policy</Link> of this server. <br />
-          Do you wish to continue?
-        </>} positiveActionText={'Yes, Create Link'}
-      />
-    )}
-
-    {/* [chat link] response */}
-    {enableSharing && !!chatLinkResponse && (
-      <ExportedChatLink open onClose={() => setChatLinkResponse(null)} response={chatLinkResponse} />
-    )}
-
-
-    {/* [publish] confirmation */}
-    {publishConversationId && (
-      <ConfirmationModal
-        open onClose={() => setPublishConversationId(null)} onPositive={handlePublishConfirmed}
-        confirmationText={<>
-          Share your conversation anonymously on <Link href='https://paste.gg' target='_blank'>paste.gg</Link>?
-          It will be unlisted and available to share and read for 30 days. Keep in mind, deletion may not be possible.
-          Do you wish to continue?
-        </>} positiveActionText={'Understood, Upload to Paste.gg'}
-      />
-    )}
-
-    {/* [publish] response */}
-    {!!publishResponse && (
-      <ExportedPublish open onClose={handlePublishResponseClosed} response={publishResponse} />
-    )}
-
-  </>;
+      {/* [publish] response */}
+      {!!publishResponse && <ExportedPublish open onClose={handlePublishResponseClosed} response={publishResponse} />}
+    </>
+  );
 }

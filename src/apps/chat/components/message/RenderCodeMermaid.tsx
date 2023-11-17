@@ -6,7 +6,6 @@ import { Box } from '@mui/joy';
 import { appTheme } from '~/common/app.theme';
 import { isBrowser } from '~/common/util/pwaUtils';
 
-
 /**
  * We are loading Mermaid from the CDN (and spending all the work to dynamically load it
  * and strong type it), because the Mermaid dependencies (npm i mermaid) are too heavy
@@ -17,10 +16,9 @@ import { isBrowser } from '~/common/util/pwaUtils';
  */
 const MERMAID_CDN_FILE: string = 'https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js';
 
-
 interface MermaidAPI {
   initialize: (config: any) => void;
-  render: (id: string, text: string, svgContainingElement?: Element) => Promise<{ svg: string, bindFunctions?: (element: Element) => void }>;
+  render: (id: string, text: string, svgContainingElement?: Element) => Promise<{ svg: string; bindFunctions?: (element: Element) => void }>;
 }
 
 // extend the Window interface, to allow for the mermaid API to be found
@@ -32,18 +30,15 @@ declare global {
 }
 
 const useMermaidStore = create<{
-  mermaidAPI: MermaidAPI | null,
-  loadingError: string | null,
-}>()(
-  () => ({
-    mermaidAPI: null,
-    loadingError: null,
-  }),
-);
+  mermaidAPI: MermaidAPI | null;
+  loadingError: string | null;
+}>()(() => ({
+  mermaidAPI: null,
+  loadingError: null,
+}));
 
 let loadingStarted: boolean = false;
 let loadingError: string | null = null;
-
 
 function loadMermaidFromCDN() {
   if (isBrowser && !loadingStarted) {
@@ -98,15 +93,12 @@ function initializeMermaid(mermaidAPI: MermaidAPI): MermaidAPI {
 function useMermaidLoader() {
   const { mermaidAPI } = useMermaidStore();
   React.useEffect(() => {
-    if (!mermaidAPI)
-      loadMermaidFromCDN();
+    if (!mermaidAPI) loadMermaidFromCDN();
   }, [mermaidAPI]);
   return { mermaidAPI, isSuccess: !!mermaidAPI, isLoading: loadingStarted, error: loadingError };
 }
 
-
 export function RenderCodeMermaid(props: { mermaidCode: string }) {
-
   // state
   const [svgCode, setSvgCode] = React.useState<string | null>(null);
   const hasUnmounted = React.useRef(false);
@@ -115,12 +107,9 @@ export function RenderCodeMermaid(props: { mermaidCode: string }) {
   // external state
   const { mermaidAPI, error: mermaidError } = useMermaidLoader();
 
-
   // [effect] re-render on code changes
   React.useEffect(() => {
-
-    if (!mermaidAPI)
-      return;
+    if (!mermaidAPI) return;
 
     const updateSvgCode = () => {
       const elementId = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
@@ -132,9 +121,7 @@ export function RenderCodeMermaid(props: { mermaidCode: string }) {
             // bindFunctions?.(mermaidContainerRef.current);
           }
         })
-        .catch((error) =>
-          console.warn('The AI-generated Mermaid code is invalid, please try again. Details below:\n >>', error.message),
-        );
+        .catch((error) => console.warn('The AI-generated Mermaid code is invalid, please try again. Details below:\n >>', error.message));
     };
 
     // strict-mode de-bounce, plus watch for unmounts
@@ -146,17 +133,8 @@ export function RenderCodeMermaid(props: { mermaidCode: string }) {
     };
   }, [mermaidAPI, props.mermaidCode]);
 
-
   // render errors when loading Mermaid. for syntax errors, the Error SVG will be rendered in-place
-  if (mermaidError)
-    return <div>Error: {mermaidError}</div>;
+  if (mermaidError) return <div>Error: {mermaidError}</div>;
 
-  return (
-    <Box
-      component='div'
-      ref={mermaidContainerRef}
-      dangerouslySetInnerHTML={{ __html: svgCode || 'Loading Diagram...' }}
-    />
-  );
-
+  return <Box component="div" ref={mermaidContainerRef} dangerouslySetInnerHTML={{ __html: svgCode || 'Loading Diagram...' }} />;
 }

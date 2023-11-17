@@ -10,15 +10,14 @@ import type { VChatFunctionIn, VChatMessageIn, VChatMessageOrFunctionCallOut, VC
 import { OpenAILLMOptions } from './OpenAILLMOptions';
 import { OpenAISourceSetup } from './OpenAISourceSetup';
 
-
 // special symbols
 export const isValidOpenAIApiKey = (apiKey?: string) => !!apiKey && apiKey.startsWith('sk-') && apiKey.length > 40;
 
 export interface SourceSetupOpenAI {
   oaiKey: string;
   oaiOrg: string;
-  oaiHost: string;  // use OpenAI-compatible non-default hosts (full origin path)
-  heliKey: string;  // helicone key (works in conjunction with oaiHost)
+  oaiHost: string; // use OpenAI-compatible non-default hosts (full origin path)
+  heliKey: string; // helicone key (works in conjunction with oaiHost)
   moderationCheck: boolean;
 }
 
@@ -55,24 +54,32 @@ export const ModelVendorOpenAI: IModelVendor<SourceSetupOpenAI, LLMOptionsOpenAI
     const access = this.getAccess(llm._source.setup);
     return openAICallChatGenerate(access, llm.options, messages, null, null, maxTokens);
   },
-  callChatGenerateWF(llm, messages: VChatMessageIn[], functions: VChatFunctionIn[] | null, forceFunctionName: string | null, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut> {
+  callChatGenerateWF(
+    llm,
+    messages: VChatMessageIn[],
+    functions: VChatFunctionIn[] | null,
+    forceFunctionName: string | null,
+    maxTokens?: number,
+  ): Promise<VChatMessageOrFunctionCallOut> {
     const access = this.getAccess(llm._source.setup);
     return openAICallChatGenerate(access, llm.options, messages, functions, forceFunctionName, maxTokens);
   },
 };
 
-
 /**
  * This function either returns the LLM message, or function calls, or throws a descriptive error string
  */
 export async function openAICallChatGenerate<TOut = VChatMessageOut | VChatMessageOrFunctionCallOut>(
-  access: OpenAIAccessSchema, llmOptions: Partial<LLMOptionsOpenAI>, messages: VChatMessageIn[],
-  functions: VChatFunctionIn[] | null, forceFunctionName: string | null,
+  access: OpenAIAccessSchema,
+  llmOptions: Partial<LLMOptionsOpenAI>,
+  messages: VChatMessageIn[],
+  functions: VChatFunctionIn[] | null,
+  forceFunctionName: string | null,
   maxTokens?: number,
 ): Promise<TOut> {
   const { llmRef, llmTemperature = 0.5, llmResponseTokens } = llmOptions;
   try {
-    return await apiAsync.llmOpenAI.chatGenerateWithFunctions.mutate({
+    return (await apiAsync.llmOpenAI.chatGenerateWithFunctions.mutate({
       access,
       model: {
         id: llmRef!,
@@ -82,7 +89,7 @@ export async function openAICallChatGenerate<TOut = VChatMessageOut | VChatMessa
       functions: functions ?? undefined,
       forceFunctionName: forceFunctionName ?? undefined,
       history: messages,
-    }) as TOut;
+    })) as TOut;
   } catch (error: any) {
     const errorMessage = error?.message || error?.toString() || 'OpenAI Chat Generate Error';
     console.error(`openAICallChatGenerate: ${errorMessage}`);

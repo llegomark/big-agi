@@ -10,7 +10,6 @@ import { initTRPC } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 
-
 /**
  * 1. CONTEXT
  *
@@ -19,12 +18,11 @@ import { ZodError } from 'zod';
  * These allow you to access things when processing a request, like the database, the session, etc.
  */
 
-export const createTRPCFetchContext = ({ /*req, resHeaders*/ }: { req: Request; resHeaders: Headers; }) => {
+export const createTRPCFetchContext = ({} /*req, resHeaders*/ : { req: Request; resHeaders: Headers }) => {
   // const user = { name: req.headers.get('username') ?? 'anonymous' };
   // return { req, resHeaders };
   return {};
 };
-
 
 /**
  * 2. INITIALIZATION
@@ -41,8 +39,7 @@ const t = initTRPC.context<typeof createTRPCFetchContext>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? error.cause.flatten() : null,
+        zodError: error.cause instanceof ZodError ? error.cause.flatten() : null,
       },
     };
   },

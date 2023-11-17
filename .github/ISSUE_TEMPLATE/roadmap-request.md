@@ -1,10 +1,9 @@
 ---
 name: Roadmap request
 about: Suggest a roadmap item
-title: "[Roadmap]"
+title: '[Roadmap]'
 labels: ''
 assignees: ''
-
 ---
 
 **Why**

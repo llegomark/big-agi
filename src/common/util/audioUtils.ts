@@ -2,7 +2,7 @@ import * as React from 'react';
 
 export function playSoundUrl(url: string) {
   const audio = new Audio(url);
-  audio.play().catch(error => console.error('Error playing audio:', url, error));
+  audio.play().catch((error) => console.error('Error playing audio:', url, error));
 }
 
 export async function playSoundBuffer(audioBuffer: ArrayBuffer) {
@@ -12,7 +12,6 @@ export async function playSoundBuffer(audioBuffer: ArrayBuffer) {
   bufferSource.connect(audioContext.destination);
   bufferSource.start();
 }
-
 
 /**
  * Plays a sound from a URL, and optionally repeats it after a delay.
@@ -36,12 +35,10 @@ export function usePlaySoundUrl(url: string | null, firstDelay: number = 0, repe
 
     return () => {
       clearTimeout(timer1);
-      if (timer2)
-        clearInterval(timer2);
+      if (timer2) clearInterval(timer2);
     };
   }, [firstDelay, repeatMs, url]);
 }
-
 
 /* Note: the following function was an earlier implementation of AudioLivePlayer, but it didn't work well.
 

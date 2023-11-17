@@ -22,13 +22,13 @@ For detailed instructions on setting up the Ollama API server, please refer to t
 
 ### Visual Guide
 
-* After adding the `Ollama` model vendor, entering the IP address of an Ollama server, and refreshing models:
+- After adding the `Ollama` model vendor, entering the IP address of an Ollama server, and refreshing models:
   <img src="pixels/config-ollama-1-models.png" alt="config-local-ollama-1-models.png" style="max-width: 320px;">
 
-* The `Ollama` admin panel, with the `Pull` button highlighted, after pulling the "Yi" model:
+- The `Ollama` admin panel, with the `Pull` button highlighted, after pulling the "Yi" model:
   <img src="pixels/config-ollama-2-admin-pull.png" alt="config-local-ollama-2-admin-pull.png" style="max-width: 320px;">
 
-* You can now switch model/persona dynamically and text/voice chat with the models:
+- You can now switch model/persona dynamically and text/voice chat with the models:
   <img src="pixels/config-ollama-3-chat.png" alt="config-local-ollama-3-chat.png" style="max-width: 320px;">
 
 ### Advanced: Model parameters
@@ -60,7 +60,7 @@ Then, edit the nginx configuration file `/etc/nginx/sites-enabled/default` and a
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
-        
+
         # Disable buffering for the streaming responses
         proxy_buffering off;
     }
@@ -73,7 +73,6 @@ Reach out to our community if you need help with this.
 Join our community to share your experiences, get help, and discuss best practices:
 
 [![Official Discord](https://discordapp.com/api/guilds/1098796266906980422/widget.png?style=banner2)](https://discord.gg/MkH4qj2Jp9)
-
 
 ---
 

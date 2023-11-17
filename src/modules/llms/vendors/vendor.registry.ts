@@ -22,7 +22,6 @@ const MODEL_VENDOR_REGISTRY: Record<ModelVendorId, IModelVendor> = {
 
 const MODEL_VENDOR_DEFAULT: ModelVendorId = 'openai';
 
-
 export function findAllVendors(): IModelVendor[] {
   const modelVendors = Object.values(MODEL_VENDOR_REGISTRY);
   modelVendors.sort((a, b) => a.rank - b.rank);
@@ -30,7 +29,7 @@ export function findAllVendors(): IModelVendor[] {
 }
 
 export function findVendorById(vendorId?: ModelVendorId): IModelVendor | null {
-  return vendorId ? (MODEL_VENDOR_REGISTRY[vendorId] ?? null) : null;
+  return vendorId ? MODEL_VENDOR_REGISTRY[vendorId] ?? null : null;
 }
 
 export function findVendorForLlmOrThrow(llmId: DLLMId) {
@@ -48,7 +47,7 @@ export function createModelSourceForVendor(vendorId: ModelVendorId, otherSources
   // make a unique sourceId
   let sourceId: DModelSourceId = vendorId;
   let sourceN = 0;
-  while (otherSources.find(source => source.id === sourceId)) {
+  while (otherSources.find((source) => source.id === sourceId)) {
     sourceN++;
     sourceId = `${vendorId}-${sourceN}`;
   }

@@ -7,7 +7,6 @@ import type { ChatStreamFirstPacketSchema, ChatStreamInputSchema } from './serve
 import type { OpenAIWire } from './server/openai/openai.wiretypes';
 import type { VChatMessageIn } from './chatGenerate';
 
-
 /**
  * Client side chat generation, with streaming. This decodes the (text) streaming response from
  * our server streaming endpoint (plain text, not EventSource), and signals updates via a callback.
@@ -24,22 +23,20 @@ export async function streamChat(
   llmId: DLLMId,
   messages: VChatMessageIn[],
   abortSignal: AbortSignal,
-  onUpdate: (update: Partial<{ text: string, typing: boolean, originLLM: string }>, done: boolean) => void,
+  onUpdate: (update: Partial<{ text: string; typing: boolean; originLLM: string }>, done: boolean) => void,
 ): Promise<void> {
   const { llm, vendor } = findVendorForLlmOrThrow(llmId);
   const access = vendor.getAccess(llm._source.setup) as ChatStreamInputSchema['access'];
   return await vendorStreamChat(access, llm, messages, abortSignal, onUpdate);
 }
 
-
 async function vendorStreamChat<TSourceSetup = unknown, TLLMOptions = unknown>(
   access: ChatStreamInputSchema['access'],
   llm: DLLM<TSourceSetup, TLLMOptions>,
   messages: VChatMessageIn[],
   abortSignal: AbortSignal,
-  onUpdate: (update: Partial<{ text: string, typing: boolean, originLLM: string }>, done: boolean) => void,
+  onUpdate: (update: Partial<{ text: string; typing: boolean; originLLM: string }>, done: boolean) => void,
 ) {
-
   // [OpenAI-only] check for harmful content with the free 'moderation' API
   if (access.dialect === 'openai') {
     const lastMessage = messages.at(-1) ?? null;
@@ -47,12 +44,12 @@ async function vendorStreamChat<TSourceSetup = unknown, TLLMOptions = unknown>(
     if (useModeration) {
       try {
         const moderationResult: OpenAIWire.Moderation.Response = await apiAsync.llmOpenAI.moderation.mutate({
-          access, text: lastMessage.content,
+          access,
+          text: lastMessage.content,
         });
         const issues = moderationResult.results.reduce((acc, result) => {
           if (result.flagged) {
-            Object
-              .entries(result.categories)
+            Object.entries(result.categories)
               .filter(([_, value]) => value)
               .forEach(([key, _]) => acc.add(key));
           }
@@ -61,19 +58,25 @@ async function vendorStreamChat<TSourceSetup = unknown, TLLMOptions = unknown>(
 
         // if there's any perceived violation, we stop here
         if (issues.size) {
-          const categoriesText = [...issues].map(c => `\`${c}\``).join(', ');
+          const categoriesText = [...issues].map((c) => `\`${c}\``).join(', ');
           // do not proceed with the streaming request
-          return onUpdate({
-            text: `[Moderation] I an unable to provide a response to your query as it violated the following categories of the OpenAI usage policies: ${categoriesText}.\nFor further explanation please visit https://platform.openai.com/docs/guides/moderation/moderation`,
-            typing: false,
-          }, true);
+          return onUpdate(
+            {
+              text: `[Moderation] I an unable to provide a response to your query as it violated the following categories of the OpenAI usage policies: ${categoriesText}.\nFor further explanation please visit https://platform.openai.com/docs/guides/moderation/moderation`,
+              typing: false,
+            },
+            true,
+          );
         }
       } catch (error: any) {
         // as the moderation check was requested, we cannot proceed in case of error
-        return onUpdate({
-          text: `[Issue] There was an error while checking for harmful content. ${error?.toString()}`,
-          typing: false,
-        }, true);
+        return onUpdate(
+          {
+            text: `[Issue] There was an error while checking for harmful content. ${error?.toString()}`,
+            typing: false,
+          },
+          true,
+        );
       }
     }
   }
@@ -125,8 +128,7 @@ async function vendorStreamChat<TSourceSetup = unknown, TLLMOptions = unknown>(
     // injected by us to transmit the model name
     if (!parsedFirstPacket && incrementalText.startsWith('{')) {
       const endOfJson = incrementalText.indexOf('}');
-      if (endOfJson === -1)
-        continue;
+      if (endOfJson === -1) continue;
       const json = incrementalText.substring(0, endOfJson + 1);
       incrementalText = incrementalText.substring(endOfJson + 1);
       parsedFirstPacket = true;
@@ -139,7 +141,6 @@ async function vendorStreamChat<TSourceSetup = unknown, TLLMOptions = unknown>(
       }
     }
 
-    if (incrementalText)
-      onUpdate({ text: incrementalText }, false);
+    if (incrementalText) onUpdate({ text: incrementalText }, false);
   }
 }

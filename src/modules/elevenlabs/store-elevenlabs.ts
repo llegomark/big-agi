@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-
 interface ElevenlabsStore {
-
   // ElevenLabs Text to Speech settings
 
   elevenLabsApiKey: string;
@@ -14,13 +12,11 @@ interface ElevenlabsStore {
 
   elevenLabsAutoSpeak: 'off' | 'firstLine';
   setElevenLabsAutoSpeak: (autoSpeak: 'off' | 'firstLine') => void;
-
 }
 
 export const useElevenlabsStore = create<ElevenlabsStore>()(
   persist(
     (set) => ({
-
       // ElevenLabs Text to Speech settings
 
       elevenLabsApiKey: '',
@@ -31,9 +27,9 @@ export const useElevenlabsStore = create<ElevenlabsStore>()(
 
       elevenLabsAutoSpeak: 'off',
       setElevenLabsAutoSpeak: (elevenLabsAutoSpeak: 'off' | 'firstLine') => set({ elevenLabsAutoSpeak }),
-
     }),
     {
       name: 'app-module-elevenlabs',
-    }),
+    },
+  ),
 );

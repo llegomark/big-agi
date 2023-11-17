@@ -15,9 +15,12 @@ export function htmlTableToMarkdown(html: string): string {
   const markdownRows: string[] = [];
   const headerCells = table.querySelectorAll('thead th');
   if (headerCells.length > 0) {
-    const headerRow = '| ' + Array.from(headerCells)
-      .map(cell => cell.textContent?.trim() || '')
-      .join(' | ') + '| ';
+    const headerRow =
+      '| ' +
+      Array.from(headerCells)
+        .map((cell) => cell.textContent?.trim() || '')
+        .join(' | ') +
+      '| ';
     markdownRows.push(headerRow);
     markdownRows.push('|:' + Array(headerCells.length).fill('-').join('|:') + '|');
   }
@@ -25,9 +28,12 @@ export function htmlTableToMarkdown(html: string): string {
   const bodyRows = table.querySelectorAll('tbody tr');
   for (const row of Array.from(bodyRows)) {
     const rowCells = row.querySelectorAll('td');
-    const markdownRow = '| ' + Array.from(rowCells)
-      .map(cell => cell.textContent?.trim() || '')
-      .join(' | ') + ' |';
+    const markdownRow =
+      '| ' +
+      Array.from(rowCells)
+        .map((cell) => cell.textContent?.trim() || '')
+        .join(' | ') +
+      ' |';
     markdownRows.push(markdownRow);
   }
 

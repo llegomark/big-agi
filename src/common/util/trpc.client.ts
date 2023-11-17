@@ -14,12 +14,9 @@ import { type AppRouterEdge, type AppRouterNode } from '~/server/api/trpc.router
 
 import { getBaseUrl } from './urlUtils';
 
-
 const enableLoggerLink = (opts: any) => {
-  return process.env.NODE_ENV === 'development' ||
-    (opts.direction === 'down' && opts.result instanceof Error);
+  return process.env.NODE_ENV === 'development' || (opts.direction === 'down' && opts.result instanceof Error);
 };
-
 
 /**
  * Typesafe React Query hooks for the tRPC Edge-Runtime API
@@ -55,7 +52,6 @@ export const apiQuery = createTRPCNext<AppRouterEdge>({
   ssr: false,
 });
 
-
 /**
  * Typesafe async/await hooks for the the Edge-Runtime API
  */
@@ -69,7 +65,6 @@ export const apiAsync = createTRPCProxyClient<AppRouterEdge>({
   ],
 });
 
-
 /**
  * Node/Immediate API: Typesafe async/await hooks for the the Node functions API
  */
@@ -82,4 +77,3 @@ export const apiAsyncNode = createTRPCProxyClient<AppRouterNode>({
     }),
   ],
 });
-
