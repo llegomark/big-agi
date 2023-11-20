@@ -5,59 +5,64 @@
 import { DLLMId } from '~/modules/llms/store-llms';
 import { callApiSearchGoogle } from '~/modules/google/search.client';
 import { callChatGenerate, VChatMessageIn } from '~/modules/llms/transports/chatGenerate';
-
+import { evaluate } from 'mathjs';
 
 // prompt to implement the ReAct paradigm: https://arxiv.org/abs/2210.03629
-const reActPrompt: string =
-  `You are a Question Answering AI with reasoning ability.
-You will receive a Question from the User.
-In order to answer any Question, you run in a loop of Thought, Action, PAUSE, Observation.
-If from the Thought or Observation you can derive the answer to the Question, you MUST also output an "Answer: ", followed by the answer and the answer ONLY, without explanation of the steps used to arrive at the answer.
-You will use "Thought: " to describe your thoughts about the question being asked.
-You will use "Action: " to run one of the actions available to you - then return PAUSE. NEVER continue generating "Observation: " or "Answer: " in the same response that contains PAUSE.
-"Observation" will be presented to you as the result of previous "Action".
-If the "Observation" you received is not related to the question asked, or you cannot derive the answer from the observation, change the Action to be performed and try again.
+const reActPrompt: string = `Take a deep breath first and work on this step-by-step. You are an advanced AI designed for Question Answering with in-depth reasoning capability, acting as an expert in research and information synthesis, critical thinking, data analysis, and other relevant fields. Upon receiving a Question from the User, you will engage in a comprehensive Thought process, followed by an Action, a PAUSE, and an Observation. Your expertise encompasses historical knowledge, scientific explanations, current affairs, cultural literacy, technological trends, educational tutoring, and ethical reasoning, ensuring that your answers are not only accurate but also informative and contextually rich.
 
-ALWAYS assume today as {{currentDate}} when dealing with questions regarding dates.
-Never mention your knowledge cutoff date
+Here's what you will do:
+- Use "Thought: " to provide a thorough analysis and contemplation of the question.
+- Use "Action: " to execute an available action, then immediately enter a PAUSE state. Avoid including "Observation: " or "Answer: " in the same output as PAUSE.
+- "Observation" will be the result of the "Action" and is used for further reasoning or to formulate an answer.
+- If "Observation" is not helpful or does not lead to an answer, choose a different "Action" to take.
 
-Your available "Actions" are:
+Please follow these guidelines:
+- The current date is set as {{currentDate}} for any date-related questions.
 
-google:
-e.g. google: Django
-Returns google custom search results
-ALWAYS look up on google when the question is related to live events or factual information, such as sports, news, or weather.
+Available "Actions" include:
 
-calculate:
-e.g. calculate: 4 * 7 / 3
-Runs a calculation and returns the number - uses Python so be sure to use floating point syntax if necessary
+1. google:
+   - Utilize for inquiries about recent developments, real-time data, or specifics that are time-sensitive.
+   - Ideal for topics like news headlines, weather forecasts, stock market updates, sports scores, or event dates.
+   - Ensure the query is precise to yield the most relevant results.
+   - Outputs should be concise yet comprehensive, providing a summary along with key details.
+   - In cases where information is too vast or varied, prioritize data from the most credible sources or the latest reports.
+   - If the information is not readily available or is speculative, advise accordingly.
 
-wikipedia:
-e.g. wikipedia: Django
-Returns a summary from searching Wikipedia
+2. calculate:
+   - Use for mathematical queries that can be expressed in standard mathematical notation.
+   - The input should be a string that represents a mathematically valid expression.
+   - The expression should use standard arithmetic operators and functions compatible with the mathjs library.
+   - Avoid complex expressions that require advanced mathematical concepts not supported by mathjs.
+   - If the original question is not in the form of a mathematical expression, convert it into one before processing.
+   - Provide a detailed step-by-step breakdown of the calculations, showing intermediate steps and results if possible.
+   - For example, to calculate the area of a circle with a radius of 3 units, the user should input "pi * 3^2", which will be evaluated to give the area.
 
-ONLY look things up on Wikipedia when explicitly asked to do so.
-
-Example session:
+3. wikipedia:
+   - Employ solely for requests that specifically ask for information from Wikipedia or imply the need for encyclopedic knowledge.
+   - Well-suited for historical data, biographical details, summaries of books or movies, scientific concepts, or geographical information.
+   - Outputs should offer a succinct summary and include essential aspects of the subject, referencing the most pertinent parts of the Wikipedia article.
+   - Strive to provide context that helps the user understand the relevance and significance of the information.
+   - If an article is too long, focus on summarizing the introduction and any other sections directly related to the user’s question.
+   - Acknowledge if a Wikipedia page on the topic does not exist or if the information is subject to dispute or ongoing updates.
+   
+An example interaction should go as follows:
 
 Question: What is the capital of France?
-Thought: I should look up France on Wikipedia
+Thought: The capital of France is a well-known fact, but to be accurate, I'll verify this information with a reliable source. Wikipedia is a suitable resource for this type of factual question.
 Action: wikipedia: France
 
-You will be called again with the following, along with all previous messages between the User and You:
+You will receive an "Observation" based on your "Action", along with all previous messages.
 
-Observation: France is a country. The capital is Paris.
+Observation: France is a country in Western Europe. The capital city, located on the Seine River, is Paris.
 
-You then output:
-Answer: The capital of France is Paris
+Your response should be detailed:
+Answer: Paris is the capital of France. It is an iconic global city known for its culture, art, fashion, and gastronomy. The city of lights has a rich history and is home to numerous famous landmarks such as the Eiffel Tower, Notre-Dame Cathedral, and the Louvre Museum.
 `;
-
 
 export const CmdRunReact: string[] = ['/react'];
 
-
 const actionRe = /^Action: (\w+): (.*)$/;
-
 
 /**
  * State - Abstraction used for serialization, save/restore, inspection, debugging, rendering, etc.
@@ -74,7 +79,6 @@ interface State {
 }
 
 export class Agent {
-
   // NOTE: this is here for demo, but the whole loop could be moved to the caller's event loop
   async reAct(question: string, llmId: DLLMId, maxTurns = 5, log: (...data: any[]) => void = console.log, show: (state: object) => void): Promise<string> {
     let i = 0;
@@ -90,8 +94,7 @@ export class Agent {
     // return only the 'Answer: ' part of the result
     if (S.result) {
       const idx = S.result.indexOf('Answer: ');
-      if (idx !== -1)
-        return S.result.slice(idx + 8);
+      if (idx !== -1) return S.result.slice(idx + 8);
     }
     return S.result || 'No result';
   }
@@ -121,12 +124,20 @@ export class Agent {
     S.messages.push({ role: 'user', content: prompt });
     let content: string;
     try {
-      content = (await callChatGenerate(llmId, S.messages, 500)).content;
+      let tempContent = '';
+      let needMore = true;
+      while (needMore) {
+        content = (await callChatGenerate(llmId, S.messages, 2500)).content; // Increased token limit for longer output
+        // Check if the response contains "PAUSE" to decide if more content is needed.
+        needMore = content.includes('PAUSE');
+        tempContent += content;
+        // If PAUSE was found, remove it and anything after it to continue the loop.
+        tempContent = this.truncateStringAfterPause(tempContent);
+      }
+      content = tempContent;
     } catch (error: any) {
       content = `Error in callChat: ${error}`;
     }
-    // process response, strip out potential hallucinated response after PAUSE is detected
-    content = this.truncateStringAfterPause(content);
     S.messages.push({ role: 'assistant', content });
     return content;
   }
@@ -142,45 +153,81 @@ export class Agent {
     if (actions.length > 0) {
       const action = actions[0][1];
       const actionInput = actions[0][2];
-      if (!(action in knownActions)) {
-        throw new Error(`Unknown action: ${action}: ${actionInput}`);
+      // Check if the action is one of the known keys, then assert the type
+      if (action in knownActions) {
+        S.lastObservation = await knownActions[action as keyof typeof knownActions](actionInput);
+        S.nextPrompt = `Observation: ${S.lastObservation}`;
+        log(S.nextPrompt);
+      } else {
+        throw new Error(`Unknown action: ${action}`);
       }
-      log(`⚡ ${action} "${actionInput}"`);
-      S.lastObservation = await knownActions[action](actionInput);
-      S.nextPrompt = `Observation: ${S.lastObservation}`;
-      log(S.nextPrompt);
     } else {
       log('↙ done');
-      // log(`Result: ${result}`);
       S.result = result;
     }
   }
 }
 
-
+/**
+ * Represents a function that executes an action and returns a result.
+ * @typedef {Function} ActionFunction
+ * @param {string} input - The input string to process.
+ * @returns {Promise<string>} - A promise that resolves to the action result.
+ */
 type ActionFunction = (input: string) => Promise<string>;
 
-async function wikipedia(q: string): Promise<string> {
-  const response = await fetch(
-    `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`,
-  );
+/**
+ * Fetches a snippet from a Wikipedia search.
+ * @param {string} query - The search query.
+ * @returns {Promise<string>} - A promise that resolves to the Wikipedia snippet.
+ */
+async function wikipedia(query: string): Promise<string> {
+  const response = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
   const data = await response.json();
   return data.query.search[0].snippet;
 }
 
+/**
+ * Performs a Google search and returns the results.
+ * @param {string} query - The search query.
+ * @returns {Promise<string>} - A promise that resolves to the search results.
+ */
 async function search(query: string): Promise<string> {
   try {
     const data = await callApiSearchGoogle(query);
     return JSON.stringify(data);
   } catch (error: any) {
     console.error('Error fetching search results:', error);
-    return 'An error occurred while searching the internet. Missing Google API Key? Google error: ' + (error?.message || error?.toString() || 'Unknown error');
+    throw new Error('An error occurred while searching the internet. Please try again later.');
   }
 }
 
-const calculate = async (what: string): Promise<string> => String(eval(what));
+/**
+ * Calculates a mathematical expression using math.js.
+ * @param {string} expression - The mathematical expression to evaluate.
+ * @returns {Promise<string>} - A promise that resolves to the calculation result.
+ */
+const calculate = (expression: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      if (typeof expression !== 'string' || expression.trim() === '') {
+        throw new Error('The expression is empty or not a string.');
+      }
+      const result = evaluate(expression);
+      resolve(`The result is ${result}.`);
+    } catch (error: any) {
+      console.error(`Error in calculation: ${error.message}`);
+      reject(new Error('Error in calculation. Please check the expression and try again.'));
+    }
+  });
+};
 
-const knownActions: { [key: string]: ActionFunction } = {
+type KnownActionKeys = 'wikipedia' | 'google' | 'calculate';
+
+const knownActions: { [key in KnownActionKeys]: ActionFunction } = {
   wikipedia: wikipedia,
   google: search,
   calculate: calculate,
