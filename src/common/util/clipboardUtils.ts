@@ -2,7 +2,8 @@ import { isBrowser, isFirefox } from './pwaUtils';
 
 export function copyToClipboard(text: string) {
   if (isBrowser)
-    window.navigator.clipboard.writeText(text)
+    window.navigator.clipboard
+      .writeText(text)
       .then(() => console.log('Message copied to clipboard'))
       .catch((err) => console.error('Failed to copy message: ', err));
 }
@@ -11,7 +12,6 @@ export function copyToClipboard(text: string) {
 export const supportsClipboardRead = !isFirefox;
 
 export async function getClipboardItems(): Promise<ClipboardItem[]> {
-  if (!isBrowser || !window.navigator.clipboard?.read)
-    return [];
+  if (!isBrowser || !window.navigator.clipboard?.read) return [];
   return await window.navigator.clipboard.read();
 }

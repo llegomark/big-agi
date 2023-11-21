@@ -8,23 +8,23 @@
  */
 export const Brand = {
   Title: {
-    Base: 'big-AGI',
-    Common: (process.env.NODE_ENV === 'development' ? '[DEV] ' : '') + 'big-AGI',
+    Base: 'Chat - Mark Anthony Llego',
+    Common: (process.env.NODE_ENV === 'development' ? '[DEV] ' : '') + 'Chat - Mark Anthony Llego',
   },
   Meta: {
-    Description: 'Leading open-source AI web interface to help you learn, think, and do. AI personas, superior privacy, advanced features, and fun UX.',
-    SiteName: 'big-AGI | Harnessing AI for You',
+    Description:
+      'Engage with our ChatGPT UI Alternative! Dive deep into its features, understand its nuances, and discover a new way to communicate with cutting-edge AI technology.',
+    SiteName: 'Chat - Mark Anthony Llego',
     ThemeColor: '#32383E',
-    TwitterSite: '@enricoros',
+    TwitterSite: '@markllego',
   },
   URIs: {
-    Home: 'https://big-agi.com',
-    // App: 'https://get.big-agi.com',
-    CardImage: 'https://big-agi.com/icons/card-dark-1200.png',
-    OpenRepo: 'https://github.com/enricoros/big-agi',
-    OpenProject: 'https://github.com/users/enricoros/projects/4',
-    SupportInvite: 'https://discord.gg/MkH4qj2Jp9',
-    // Twitter: 'https://www.twitter.com/enricoros',
-    PrivacyPolicy: 'https://big-agi.com/privacy',
+    Home: 'https://lego.dev/',
+    App: 'https://chat.llego.dev/',
+    CardImage: 'https://chat.llego.dev/icons/card-dark-1200.jpg',
+    OpenRepo: 'https://github.com/llegomark',
+    SupportInvite: 'https://discordapp.com/users/1012984419029622784',
+    Twitter: 'https://www.twitter.com/markllego',
+    PrivacyPolicy: 'https://llego.dev/legal/',
   },
 };

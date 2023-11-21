@@ -2,10 +2,8 @@ import * as React from 'react';
 
 import { Box, Slider, Typography } from '@mui/joy';
 
-
 // we need to use local state to avoid race conditions with start/stops (triggred by react/strict mode)
 let currMediaStream: MediaStream | null = null;
-
 
 /**
  * `useCamera` is our React hook for interacting with a camera device.
@@ -24,33 +22,29 @@ export function useCameraCapture() {
   const [error, setError] = React.useState<string | null>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-
   // stop the video stream
   const resetVideo = React.useCallback(() => {
     if (currMediaStream) {
       const tracks = currMediaStream.getTracks();
-      tracks.forEach(track => track.stop());
+      tracks.forEach((track) => track.stop());
       currMediaStream = null;
-    } else
-      console.log('stopVideo: no video stream to stop');
-    if (videoRef.current)
-      videoRef.current.srcObject = null;
+    } else console.log('stopVideo: no video stream to stop');
+    if (videoRef.current) videoRef.current.srcObject = null;
     setZoomControl(null);
     setError(null);
   }, []);
-
 
   // (once) enumerate video devices and auto-select the back-facing camera
   React.useEffect(() => {
     if (!navigator.mediaDevices) return;
     void navigator.mediaDevices.enumerateDevices().then((devices) => {
       // get video devices
-      const newVideoDevices = devices.filter(device => device.kind === 'videoinput');
+      const newVideoDevices = devices.filter((device) => device.kind === 'videoinput');
       setCameras(newVideoDevices);
 
       // auto-select the last device 'facing back', or the first device
       if (newVideoDevices.length > 0) {
-        const idx = newVideoDevices.map(device => device.label).findLastIndex(label => label.toLowerCase().endsWith('facing back'));
+        const idx = newVideoDevices.map((device) => device.label).findLastIndex((label) => label.toLowerCase().endsWith('facing back'));
         setCameraIdx(idx >= 0 ? idx : 0);
       } else {
         setCameraIdx(-1);
@@ -61,7 +55,6 @@ export function useCameraCapture() {
 
   // auto start the camera when the cameraIdx changes, and stop on unmount
   React.useEffect(() => {
-
     // do nothing if no device is selected
     const selectedDevice = cameraIdx !== -1 ? cameras[cameraIdx] ?? null : null;
     if (selectedDevice === null) return;
@@ -82,21 +75,22 @@ export function useCameraCapture() {
     return () => resetVideo();
   }, [cameraIdx, cameras, resetVideo]);
 
-
   return {
     // the html video element
     videoRef,
     // list and select camera
-    cameras, cameraIdx, setCameraIdx,
-    zoomControl, info, error,
+    cameras,
+    cameraIdx,
+    setCameraIdx,
+    zoomControl,
+    info,
+    error,
     resetVideo,
   };
 }
 
-
 async function startVideo(selectedDevice: MediaDeviceInfo, videoRef: React.RefObject<HTMLVideoElement>) {
-  if (!selectedDevice || !navigator.mediaDevices?.getUserMedia)
-    throw new Error('Browser has no camera access');
+  if (!selectedDevice || !navigator.mediaDevices?.getUserMedia) throw new Error('Browser has no camera access');
 
   console.log('startVideo', { selectedDevice });
 
@@ -117,39 +111,42 @@ async function startVideo(selectedDevice: MediaDeviceInfo, videoRef: React.RefOb
     stream = await navigator.mediaDevices.getUserMedia(searchConstrants);
 
     // attach it to the Video html element (will begin playing)
-    if (videoRef?.current)
-      videoRef.current.srcObject = stream;
+    if (videoRef?.current) videoRef.current.srcObject = stream;
 
     // get the video track
     [track] = stream.getVideoTracks();
   } catch (error: any) {
-    throw (error.name === 'NotAllowedError') ? new Error('Camera access denied') : error;
+    throw error.name === 'NotAllowedError' ? new Error('Camera access denied') : error;
   }
 
-  if (!track)
-    throw new Error('No video track found');
+  if (!track) throw new Error('No video track found');
 
   // assume we started it
   currMediaStream = stream;
 
   // Get capabilities (for the zoom ranges)
-  const capabilities = track.getCapabilities() as MediaTrackCapabilities & { zoom: { min: number, max: number, step: number } };
+  const capabilities = track.getCapabilities() as MediaTrackCapabilities & { zoom: { min: number; max: number; step: number } };
   const settings = track.getSettings();
 
   // Map zoom to a slider element.
   let zoomControl: React.ReactNode | null = null;
   if (capabilities.zoom) {
     const { min, max, step } = capabilities.zoom;
-    zoomControl =
+    zoomControl = (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mx: 1 }}>
         <Typography>Zoom:</Typography>
         <Slider
-          color='neutral' size='lg'
-          min={min} max={max} step={step} defaultValue={1}
+          color="neutral"
+          size="lg"
+          min={min}
+          max={max}
+          step={step}
+          defaultValue={1}
           onChange={(_event, value) => track.applyConstraints({ advanced: [{ zoom: value as number }] } as any)}
           sx={{ mx: 2 }}
         />
-      </Box>;
+      </Box>
+    );
   }
 
   return {

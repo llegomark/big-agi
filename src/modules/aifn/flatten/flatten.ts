@@ -5,11 +5,9 @@ import { DConversation } from '~/common/state/store-chats';
 
 import { FLATTEN_PROFILES, FlattenStyleType } from './flatten.data';
 
-
 export async function flattenConversation(llmId: DLLMId, conversation: DConversation, type: FlattenStyleType): Promise<string | null> {
-
   // get flattening instruction
-  const flattenStyle = FLATTEN_PROFILES.find(s => s.type === type);
+  const flattenStyle = FLATTEN_PROFILES.find((s) => s.type === type);
   const systemInstruction = flattenStyle?.systemPrompt;
   const userPrefixPrompt = flattenStyle?.userPrompt;
   if (!systemInstruction) throw new Error('flattenConversation: no prompt found for type: ' + type);
@@ -22,7 +20,6 @@ export async function flattenConversation(llmId: DLLMId, conversation: DConversa
 
   return chatResponse.content?.trim() ?? null;
 }
-
 
 function encodeConversationAsUserMessage(userPrompt: string, conversation: DConversation): string {
   let encodedMessages = '';

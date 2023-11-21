@@ -6,22 +6,16 @@ import { SxProps } from '@mui/joy/styles/types';
 import { hideOnMobile } from '~/common/app.theme';
 import { isMacUser } from '~/common/util/pwaUtils';
 
-
 export function platformAwareKeystrokes(text: string) {
-  return isMacUser
-    ? text
-      .replaceAll('Ctrl', '⌘')
-      .replaceAll('Alt', '⌥')
-      .replaceAll('Shift', '⇧')
-    : text;
+  return isMacUser ? text.replaceAll('Ctrl', '⌘').replaceAll('Alt', '⌥').replaceAll('Shift', '⇧') : text;
 }
 
 /**
  * Shows a shortcut combo in a nicely presented dark box.
  */
-export function KeyStroke(props: { combo: string, dark?: boolean, sx?: SxProps }) {
+export function KeyStroke(props: { combo: string; dark?: boolean; sx?: SxProps }) {
   return (
-    <Chip variant={props.dark ? 'solid' : 'outlined'} color='neutral' sx={{ ...hideOnMobile, ...props.sx }}>
+    <Chip variant={props.dark ? 'solid' : 'outlined'} color="neutral" sx={{ ...hideOnMobile, ...props.sx }}>
       {platformAwareKeystrokes(props.combo)}
     </Chip>
     // <Box sx={{

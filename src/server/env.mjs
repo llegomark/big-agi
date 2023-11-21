@@ -3,7 +3,6 @@ import { z } from 'zod';
 
 export const env = createEnv({
   server: {
-
     // Postgres, for optional storage via Prisma
     POSTGRES_PRISMA_URL: z.string().url().optional(),
     POSTGRES_URL_NON_POOLING: z.string().url().optional(),
@@ -41,10 +40,9 @@ export const env = createEnv({
     // Google Custom Search
     GOOGLE_CLOUD_API_KEY: z.string().optional(),
     GOOGLE_CSE_ID: z.string().optional(),
-    
   },
 
-  onValidationError: error => {
+  onValidationError: (error) => {
     console.error('❌ Invalid environment variables:', error.issues);
     throw new Error('Invalid environment variable');
   },

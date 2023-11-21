@@ -9,9 +9,17 @@ import { ImportConfig, ImportConversations } from './import/ImportChats';
 
 export type TradeConfig = ImportConfig | ExportConfig;
 
-export function TradeModal(props: { config: TradeConfig, onClose: () => void }) {
+export function TradeModal(props: { config: TradeConfig; onClose: () => void }) {
   return (
-    <GoodModal title={<><b>{props.config.dir === 'import' ? 'Import ' : props.config.dir === 'export' ? 'Export ' : ''}</b> conversations</>} open onClose={props.onClose}>
+    <GoodModal
+      title={
+        <>
+          <b>{props.config.dir === 'import' ? 'Import ' : props.config.dir === 'export' ? 'Export ' : ''}</b> conversations
+        </>
+      }
+      open
+      onClose={props.onClose}
+    >
       <Divider />
       {props.config.dir === 'import' && <ImportConversations onClose={props.onClose} />}
       {props.config.dir === 'export' && <ExportChats config={props.config} onClose={props.onClose} />}

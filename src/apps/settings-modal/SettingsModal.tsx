@@ -1,6 +1,24 @@
 import * as React from 'react';
 
-import { Accordion, AccordionDetails, accordionDetailsClasses, AccordionGroup, AccordionSummary, accordionSummaryClasses, Avatar, Button, Divider, ListItemContent, Stack, styled, Tab, tabClasses, TabList, TabPanel, Tabs } from '@mui/joy';
+import {
+  Accordion,
+  AccordionDetails,
+  accordionDetailsClasses,
+  AccordionGroup,
+  AccordionSummary,
+  accordionSummaryClasses,
+  Avatar,
+  Button,
+  Divider,
+  ListItemContent,
+  Stack,
+  styled,
+  Tab,
+  tabClasses,
+  TabList,
+  TabPanel,
+  Tabs,
+} from '@mui/joy';
 import AddIcon from '@mui/icons-material/Add';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import ScienceIcon from '@mui/icons-material/Science';
@@ -21,11 +39,11 @@ import { AppChatSettingsUI } from './AppChatSettingsUI';
 import { UxLabsSettings } from './UxLabsSettings';
 import { VoiceSettings } from './VoiceSettings';
 
-
 // styled <AccordionGroup variant='plain'> into a Topics component
 const Topics = styled(AccordionGroup)(({ theme }) => ({
   // round and clip corners
-  borderRadius: theme.radius.md, overflow: 'hidden',
+  borderRadius: theme.radius.md,
+  overflow: 'hidden',
 
   // larger summary, with a spinning icon
   [`& .${accordionSummaryClasses.button}`]: {
@@ -44,8 +62,7 @@ const Topics = styled(AccordionGroup)(({ theme }) => ({
   },
 }));
 
-function Topic(props: { title: string, icon?: string | React.ReactNode, startCollapsed?: boolean, children?: React.ReactNode }) {
-
+function Topic(props: { title: string; icon?: string | React.ReactNode; startCollapsed?: boolean; children?: React.ReactNode }) {
   // state
   const [expanded, setExpanded] = React.useState(props.startCollapsed !== true);
 
@@ -62,42 +79,27 @@ function Topic(props: { title: string, icon?: string | React.ReactNode, startCol
         },
       }}
     >
-
-      <AccordionSummary
-        color='primary'
-        variant={expanded ? 'plain' : 'soft'}
-        indicator={<AddIcon />}
-      >
+      <AccordionSummary color="primary" variant={expanded ? 'plain' : 'soft'} indicator={<AddIcon />}>
         {!!props.icon && (
-          <Avatar
-            color='primary'
-            variant={expanded ? 'soft' : 'plain'}
-          >
+          <Avatar color="primary" variant={expanded ? 'soft' : 'plain'}>
             {props.icon}
           </Avatar>
         )}
-        <ListItemContent>
-          {props.title}
-        </ListItemContent>
+        <ListItemContent>{props.title}</ListItemContent>
       </AccordionSummary>
 
       <AccordionDetails>
-        <Stack sx={{ gap: settingsGap, border: 'none' }}>
-          {props.children}
-        </Stack>
+        <Stack sx={{ gap: settingsGap, border: 'none' }}>{props.children}</Stack>
       </AccordionDetails>
-
     </Accordion>
   );
 }
-
 
 /**
  * Component that allows the User to modify the application settings,
  * persisted on the client via localStorage.
  */
 export function SettingsModal() {
-
   // external state
   const settingsTabIndex = useLayoutPreferencesTab();
   useGlobalShortcut('p', true, true, false, openLayoutPreferences);
@@ -106,12 +108,20 @@ export function SettingsModal() {
 
   return (
     <GoodModal
-      title='Preferences' strongerTitle
-      open={!!settingsTabIndex} onClose={closeLayoutPreferences}
+      title="Preferences"
+      strongerTitle
+      open={!!settingsTabIndex}
+      onClose={closeLayoutPreferences}
       startButton={
-        <Button variant='soft' color='success' onClick={openLayoutModelsSetup} startDecorator={<BuildCircleIcon />} sx={{
-          '--Icon-fontSize': 'var(--joy-fontSize-xl2)',
-        }}>
+        <Button
+          variant="soft"
+          color="success"
+          onClick={openLayoutModelsSetup}
+          startDecorator={<BuildCircleIcon />}
+          sx={{
+            '--Icon-fontSize': 'var(--joy-fontSize-xl2)',
+          }}
+        >
           Models
         </Button>
       }
@@ -119,12 +129,11 @@ export function SettingsModal() {
         '--Card-padding': { xs: '8px', sm: '16px', lg: '24px' },
       }}
     >
-
       <Divider />
 
-      <Tabs aria-label='Settings tabbed menu' defaultValue={settingsTabIndex}>
+      <Tabs aria-label="Settings tabbed menu" defaultValue={settingsTabIndex}>
         <TabList
-          variant='soft'
+          variant="soft"
           disableUnderline
           sx={{
             '--ListItem-minHeight': '2.4rem',
@@ -143,21 +152,29 @@ export function SettingsModal() {
             },
           }}
         >
-          <Tab disableIndicator value={1} sx={tabFixSx}>UX</Tab>
-          <Tab disableIndicator value={3} sx={tabFixSx}>Voice</Tab>
-          <Tab disableIndicator value={2} sx={tabFixSx}>Draw</Tab>
-          <Tab disableIndicator value={4} sx={tabFixSx}>Tools</Tab>
+          <Tab disableIndicator value={1} sx={tabFixSx}>
+            UX
+          </Tab>
+          <Tab disableIndicator value={3} sx={tabFixSx}>
+            Voice
+          </Tab>
+          <Tab disableIndicator value={2} sx={tabFixSx}>
+            Draw
+          </Tab>
+          <Tab disableIndicator value={4} sx={tabFixSx}>
+            Tools
+          </Tab>
         </TabList>
 
         <TabPanel value={1} sx={{ p: 'var(--Tabs-gap)' }}>
           <Topics>
-            <Topic icon={<TelegramIcon />} title='User Interface'>
+            <Topic icon={<TelegramIcon />} title="User Interface">
               <AppChatSettingsUI />
             </Topic>
-            <Topic icon='🧠' title='Chat AI' startCollapsed>
+            <Topic icon="🧠" title="Chat AI" startCollapsed>
               <AppChatSettingsAI />
             </Topic>
-            <Topic icon={<ScienceIcon />} title='Labs' startCollapsed>
+            <Topic icon={<ScienceIcon />} title="Labs" startCollapsed>
               <UxLabsSettings />
             </Topic>
           </Topics>
@@ -165,10 +182,10 @@ export function SettingsModal() {
 
         <TabPanel value={3} sx={{ p: 'var(--Tabs-gap)' }}>
           <Topics>
-            <Topic icon='🎙️' title='Voice settings'>
+            <Topic icon="🎙️" title="Voice settings">
               <VoiceSettings />
             </Topic>
-            <Topic icon='📢' title='ElevenLabs API'>
+            <Topic icon="📢" title="ElevenLabs API">
               <ElevenlabsSettings />
             </Topic>
           </Topics>
@@ -176,7 +193,7 @@ export function SettingsModal() {
 
         <TabPanel value={2} sx={{ p: 'var(--Tabs-gap)' }}>
           <Topics>
-            <Topic icon='🖍️️' title='Prodia API'>
+            <Topic icon="🖍️️" title="Prodia API">
               <ProdiaSettings />
             </Topic>
           </Topics>
@@ -184,7 +201,7 @@ export function SettingsModal() {
 
         <TabPanel value={4} sx={{ p: 'var(--Tabs-gap)' }}>
           <Topics>
-            <Topic icon={<SearchIcon />} title='Google Search API'>
+            <Topic icon={<SearchIcon />} title="Google Search API">
               <GoogleSearchSettings />
             </Topic>
             {/*<Topic icon='🛠' title='Other tools...' />*/}
@@ -193,7 +210,6 @@ export function SettingsModal() {
       </Tabs>
 
       <Divider />
-
     </GoodModal>
   );
 }

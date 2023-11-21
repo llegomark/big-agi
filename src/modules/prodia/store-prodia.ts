@@ -1,14 +1,11 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
-
 
 // These work good for SDXL models, from: https://docs.prodia.com/reference/sdxl-generate
 export const HARDCODED_PRODIA_RESOLUTIONS: string[] = ['1024x1024', '1152x896', '1216x832', '1344x768', '1536x640', '640x1536', '768x1344', '832x1216'];
 export const DEFAULT_PRODIA_RESOLUTION = HARDCODED_PRODIA_RESOLUTIONS[0];
 
-
 interface ProdiaStore {
-
   // Prodia Image Generation settings
 
   prodiaApiKey: string;
@@ -35,18 +32,16 @@ interface ProdiaStore {
   prodiaUpscale: boolean;
   setProdiaUpscale: (upscale: boolean) => void;
 
-  prodiaResolution: string,
+  prodiaResolution: string;
   setProdiaResolution: (resolution: string) => void;
 
   prodiaSeed: number | null;
   setProdiaSeed: (seed: string) => void;
-
 }
 
-export const useProdiaStore = create<ProdiaStore>()(
+export const useProdiaStore = createWithEqualityFn<ProdiaStore>()(
   persist(
     (set) => ({
-
       // Prodia Image Generation settings
 
       prodiaApiKey: '',
@@ -77,8 +72,7 @@ export const useProdiaStore = create<ProdiaStore>()(
       setProdiaResolution: (prodiaResolution: string) => set({ prodiaResolution }),
 
       prodiaSeed: null,
-      setProdiaSeed: (prodiaSeed: string) => set({ prodiaSeed: (prodiaSeed === '' || prodiaSeed === '-1') ? null : parseInt(prodiaSeed) ?? null }),
-
+      setProdiaSeed: (prodiaSeed: string) => set({ prodiaSeed: prodiaSeed === '' || prodiaSeed === '-1' ? null : parseInt(prodiaSeed) ?? null }),
     }),
     {
       name: 'app-module-prodia',

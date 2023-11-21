@@ -6,13 +6,15 @@ import { useAppStateStore } from '~/common/state/store-appstate';
 
 import { incrementalVersion } from './news.data';
 
-
 export function useShowNewsOnUpdate() {
   const { push: routerPush } = useRouter();
-  const { usageCount, lastSeenNewsVersion } = useAppStateStore(state => ({
-    usageCount: state.usageCount,
-    lastSeenNewsVersion: state.lastSeenNewsVersion,
-  }), shallow);
+  const { usageCount, lastSeenNewsVersion } = useAppStateStore(
+    (state) => ({
+      usageCount: state.usageCount,
+      lastSeenNewsVersion: state.lastSeenNewsVersion,
+    }),
+    shallow,
+  );
   React.useEffect(() => {
     const isNewsOutdated = (lastSeenNewsVersion || 0) < incrementalVersion;
     if (isNewsOutdated && usageCount > 2) {

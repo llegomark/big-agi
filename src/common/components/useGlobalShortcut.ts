@@ -6,7 +6,6 @@ export const GlobalShortcut = {
   Right: 'ArrowRight',
 };
 
-
 /**
  * Registers a global keyboard shortcut (if not undefined) to activate a callback.
  *
@@ -21,8 +20,7 @@ export const useGlobalShortcut = (shortcutKey: string | false, useCtrl: boolean,
     if (!shortcutKey) return;
     const lcShortcut = shortcutKey.toLowerCase();
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((useCtrl === event.ctrlKey) && (useShift === event.shiftKey) && (useAlt === event.altKey)
-        && event.key.toLowerCase() === lcShortcut) {
+      if (useCtrl === event.ctrlKey && useShift === event.shiftKey && useAlt === event.altKey && event.key.toLowerCase() === lcShortcut) {
         event.preventDefault();
         event.stopPropagation();
         callback();

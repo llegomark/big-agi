@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { createJSONStorage, devtools, persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -7,7 +7,6 @@ import { DLLMId, useModelsStore } from '~/modules/llms/store-llms';
 import { countModelTokens } from '../util/token-counter';
 import { defaultSystemPurposeId, SystemPurposeId } from '../../data';
 import { IDB_MIGRATION_INITIAL, idbStateStorage } from '../util/idbUtils';
-
 
 /**
  * Conversation, a list of messages between humans and bots
@@ -21,9 +20,9 @@ export interface DConversation {
   systemPurposeId: SystemPurposeId;
   userTitle?: string;
   autoTitle?: string;
-  tokenCount: number;                 // f(messages, llmId)
-  created: number;                    // created timestamp
-  updated: number | null;             // updated timestamp
+  tokenCount: number; // f(messages, llmId)
+  created: number; // created timestamp
+  updated: number | null; // updated timestamp
   // Not persisted, used while in-memory, or temporarily by the UI
   abortController: AbortController | null;
   ephemerals: DEphemeral[];
@@ -56,18 +55,18 @@ const defaultConversations: DConversation[] = [createDConversation()];
 export interface DMessage {
   id: string;
   text: string;
-  sender: 'You' | 'Bot' | string;   // pretty name
-  avatar: string | null;            // null, or image url
+  sender: 'You' | 'Bot' | string; // pretty name
+  avatar: string | null; // null, or image url
   typing: boolean;
   role: 'assistant' | 'system' | 'user';
 
-  purposeId?: SystemPurposeId;      // only assistant/system
-  originLLM?: string;               // only assistant - model that generated this message, goes beyond known models
+  purposeId?: SystemPurposeId; // only assistant/system
+  originLLM?: string; // only assistant - model that generated this message, goes beyond known models
 
-  tokenCount: number;               // cache for token count, using the current Conversation model (0 = not yet calculated)
+  tokenCount: number; // cache for token count, using the current Conversation model (0 = not yet calculated)
 
-  created: number;                  // created timestamp
-  updated: number | null;           // updated timestamp
+  created: number; // created timestamp
+  updated: number | null; // updated timestamp
 }
 
 export function createDMessage(role: DMessage['role'], text: string): DMessage {
@@ -102,7 +101,6 @@ export function createDEphemeral(title: string, initialText: string): DEphemeral
     state: {},
   };
 }
-
 
 /// Conversations Store
 
@@ -140,346 +138,312 @@ interface ChatActions {
   _editConversation: (conversationId: string, update: Partial<DConversation> | ((conversation: DConversation) => Partial<DConversation>)) => void;
 }
 
-export const useChatStore = create<ChatState & ChatActions>()(devtools(
-  persist(
-    (set, get) => ({
+export const useChatStore = createWithEqualityFn<ChatState & ChatActions>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // default state
+        conversations: defaultConversations,
+        activeConversationId: defaultConversations[0].id,
 
-      // default state
-      conversations: defaultConversations,
-      activeConversationId: defaultConversations[0].id,
+        createConversationOrSwitch: () =>
+          set((state) => {
+            // if the first conversation is empty, switch to it
+            const conversations = state.conversations;
+            if (conversations.length && conversations[0].messages.length === 0) {
+              return {
+                activeConversationId: conversations[0].id,
+              };
+            }
 
-
-      createConversationOrSwitch: () =>
-        set(state => {
-
-          // if the first conversation is empty, switch to it
-          const conversations = state.conversations;
-          if (conversations.length && conversations[0].messages.length === 0) {
+            // inherit some values from the active conversation (matches users' expectations)
+            const activeConversation = conversations.find((conversation: DConversation): boolean => conversation.id === state.activeConversationId);
+            const conversation = createDConversation(activeConversation?.systemPurposeId);
             return {
-              activeConversationId: conversations[0].id,
+              conversations: [conversation, ...conversations],
+              activeConversationId: conversation.id,
             };
-          }
+          }),
 
-          // inherit some values from the active conversation (matches users' expectations)
-          const activeConversation = conversations.find((conversation: DConversation): boolean => conversation.id === state.activeConversationId);
-          const conversation = createDConversation(activeConversation?.systemPurposeId);
-          return {
-            conversations: [
-              conversation,
-              ...conversations,
-            ],
-            activeConversationId: conversation.id,
-          };
-        }),
+        duplicateConversation: (conversationId: string) =>
+          set((state) => {
+            const conversation = state.conversations.find((conversation: DConversation): boolean => conversation.id === conversationId);
+            if (!conversation) return {};
 
-      duplicateConversation: (conversationId: string) =>
-        set(state => {
-          const conversation = state.conversations.find((conversation: DConversation): boolean => conversation.id === conversationId);
-          if (!conversation)
-            return {};
-
-          // create a deep copy of the conversation
-          const deepCopy: DConversation = JSON.parse(JSON.stringify(conversation));
-          const duplicate: DConversation = {
-            ...deepCopy,
-            id: uuidv4(),
-            messages: deepCopy.messages.map((message: DMessage): DMessage => ({
-              ...message,
+            // create a deep copy of the conversation
+            const deepCopy: DConversation = JSON.parse(JSON.stringify(conversation));
+            const duplicate: DConversation = {
+              ...deepCopy,
               id: uuidv4(),
-              typing: false,
-            })),
-            updated: Date.now(),
-            abortController: null,
-            ephemerals: [],
-          };
+              messages: deepCopy.messages.map(
+                (message: DMessage): DMessage => ({
+                  ...message,
+                  id: uuidv4(),
+                  typing: false,
+                }),
+              ),
+              updated: Date.now(),
+              abortController: null,
+              ephemerals: [],
+            };
 
-          return {
-            conversations: [
-              duplicate,
-              ...state.conversations,
-            ],
-            activeConversationId: duplicate.id,
-          };
-        }),
+            return {
+              conversations: [duplicate, ...state.conversations],
+              activeConversationId: duplicate.id,
+            };
+          }),
 
-      importConversation: (conversation: DConversation, preventClash) => {
-        // if we're importing a conversation with the same id as an existing one, we need to change the id
-        if (preventClash) {
-          const exists = get().conversations.some(c => c.id === conversation.id);
-          if (exists) {
-            conversation.id = uuidv4();
-            console.warn('Conversation ID clash, changing ID to', conversation.id);
+        importConversation: (conversation: DConversation, preventClash) => {
+          // if we're importing a conversation with the same id as an existing one, we need to change the id
+          if (preventClash) {
+            const exists = get().conversations.some((c) => c.id === conversation.id);
+            if (exists) {
+              conversation.id = uuidv4();
+              console.warn('Conversation ID clash, changing ID to', conversation.id);
+            }
           }
-        }
-        get().deleteConversation(conversation.id);
-        set(state => {
-          conversation.tokenCount = updateTokenCounts(conversation.messages, true, 'importConversation');
-          return {
-            // NOTE: the .filter below is superfluous (we delete the conversation above), but it's a reminder that we don't want to corrupt the state
-            conversations: [
-              conversation,
-              ...state.conversations.filter((other: DConversation) => other.id !== conversation.id),
-            ],
-            activeConversationId: conversation.id,
-          };
-        });
-      },
+          get().deleteConversation(conversation.id);
+          set((state) => {
+            conversation.tokenCount = updateTokenCounts(conversation.messages, true, 'importConversation');
+            return {
+              // NOTE: the .filter below is superfluous (we delete the conversation above), but it's a reminder that we don't want to corrupt the state
+              conversations: [conversation, ...state.conversations.filter((other: DConversation) => other.id !== conversation.id)],
+              activeConversationId: conversation.id,
+            };
+          });
+        },
 
-      deleteConversation: (conversationId: string) =>
-        set(state => {
+        deleteConversation: (conversationId: string) =>
+          set((state) => {
+            // abort any pending requests on this conversation
+            const cIndex = state.conversations.findIndex((conversation: DConversation): boolean => conversation.id === conversationId);
+            if (cIndex >= 0) state.conversations[cIndex].abortController?.abort();
 
-          // abort any pending requests on this conversation
-          const cIndex = state.conversations.findIndex((conversation: DConversation): boolean => conversation.id === conversationId);
-          if (cIndex >= 0)
-            state.conversations[cIndex].abortController?.abort();
+            // remove from the list
+            const conversations = state.conversations.filter((conversation: DConversation): boolean => conversation.id !== conversationId);
 
-          // remove from the list
-          const conversations = state.conversations.filter((conversation: DConversation): boolean => conversation.id !== conversationId);
+            // update the active conversation to the next in list
+            let activeConversationId = undefined;
+            if (state.activeConversationId === conversationId && cIndex >= 0)
+              activeConversationId = conversations.length ? conversations[cIndex < conversations.length ? cIndex : conversations.length - 1].id : null;
 
-          // update the active conversation to the next in list
-          let activeConversationId = undefined;
-          if (state.activeConversationId === conversationId && cIndex >= 0)
-            activeConversationId = conversations.length
-              ? conversations[cIndex < conversations.length ? cIndex : conversations.length - 1].id
-              : null;
+            return {
+              conversations,
+              ...(activeConversationId !== undefined ? { activeConversationId } : {}),
+            };
+          }),
 
-          return {
-            conversations,
-            ...(activeConversationId !== undefined ? { activeConversationId } : {}),
-          };
-        }),
+        deleteAllConversations: () => {
+          set((state) => {
+            // inherit some values from the active conversation (matches users' expectations)
+            const activeConversation = state.conversations.find((conversation: DConversation): boolean => conversation.id === state.activeConversationId);
+            const conversation = createDConversation(activeConversation?.systemPurposeId);
 
-      deleteAllConversations: () => {
-        set(state => {
-          // inherit some values from the active conversation (matches users' expectations)
-          const activeConversation = state.conversations.find((conversation: DConversation): boolean => conversation.id === state.activeConversationId);
-          const conversation = createDConversation(activeConversation?.systemPurposeId);
+            // abort any pending requests on all conversations
+            state.conversations.forEach((conversation: DConversation) => conversation.abortController?.abort());
 
-          // abort any pending requests on all conversations
-          state.conversations.forEach((conversation: DConversation) => conversation.abortController?.abort());
+            // delete all, but be left with one
+            return {
+              conversations: [conversation],
+              activeConversationId: conversation.id,
+            };
+          });
+        },
 
-          // delete all, but be left with one
-          return {
-            conversations: [conversation],
-            activeConversationId: conversation.id,
-          };
-        });
-      },
+        setActiveConversationId: (conversationId: string) => set({ activeConversationId: conversationId }),
 
-      setActiveConversationId: (conversationId: string) =>
-        set({ activeConversationId: conversationId }),
+        // within a conversation
 
-
-      // within a conversation
-
-      startTyping: (conversationId: string, abortController: AbortController | null) =>
-        get()._editConversation(conversationId, () =>
-          ({
+        startTyping: (conversationId: string, abortController: AbortController | null) =>
+          get()._editConversation(conversationId, () => ({
             abortController: abortController,
           })),
 
-      stopTyping: (conversationId: string) =>
-        get()._editConversation(conversationId, conversation => {
-          conversation.abortController?.abort();
-          return {
-            abortController: null,
-          };
-        }),
+        stopTyping: (conversationId: string) =>
+          get()._editConversation(conversationId, (conversation) => {
+            conversation.abortController?.abort();
+            return {
+              abortController: null,
+            };
+          }),
 
-      setMessages: (conversationId: string, newMessages: DMessage[]) =>
-        get()._editConversation(conversationId, conversation => {
-          conversation.abortController?.abort();
-          return {
-            messages: newMessages,
-            tokenCount: updateTokenCounts(newMessages, false, 'setMessages'),
-            updated: Date.now(),
-            abortController: null,
-            ephemerals: [],
-          };
-        }),
+        setMessages: (conversationId: string, newMessages: DMessage[]) =>
+          get()._editConversation(conversationId, (conversation) => {
+            conversation.abortController?.abort();
+            return {
+              messages: newMessages,
+              tokenCount: updateTokenCounts(newMessages, false, 'setMessages'),
+              updated: Date.now(),
+              abortController: null,
+              ephemerals: [],
+            };
+          }),
 
-      appendMessage: (conversationId: string, message: DMessage) =>
-        get()._editConversation(conversationId, conversation => {
+        appendMessage: (conversationId: string, message: DMessage) =>
+          get()._editConversation(conversationId, (conversation) => {
+            if (!message.typing) updateTokenCounts([message], true, 'appendMessage');
 
-          if (!message.typing)
-            updateTokenCounts([message], true, 'appendMessage');
+            const messages = [...conversation.messages, message];
 
-          const messages = [...conversation.messages, message];
+            return {
+              messages,
+              tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
+              updated: Date.now(),
+            };
+          }),
 
-          return {
-            messages,
-            tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
-            updated: Date.now(),
-          };
-        }),
+        deleteMessage: (conversationId: string, messageId: string) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const messages = conversation.messages.filter((message) => message.id !== messageId);
 
-      deleteMessage: (conversationId: string, messageId: string) =>
-        get()._editConversation(conversationId, conversation => {
+            return {
+              messages,
+              tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
+              updated: Date.now(),
+            };
+          }),
 
-          const messages = conversation.messages.filter(message => message.id !== messageId);
+        editMessage: (conversationId: string, messageId: string, updatedMessage: Partial<DMessage>, setUpdated: boolean) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const chatLLMId = useModelsStore.getState().chatLLMId;
+            const messages = conversation.messages.map(
+              (message: DMessage): DMessage =>
+                message.id === messageId
+                  ? {
+                      ...message,
+                      ...updatedMessage,
+                      ...(setUpdated && { updated: Date.now() }),
+                      ...((updatedMessage.typing === false || !message.typing) &&
+                        chatLLMId && {
+                          tokenCount: countModelTokens(updatedMessage.text || message.text, chatLLMId, 'editMessage(typing=false)'),
+                        }),
+                    }
+                  : message,
+            );
 
-          return {
-            messages,
-            tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
-            updated: Date.now(),
-          };
-        }),
+            return {
+              messages,
+              tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
+              ...(setUpdated && { updated: Date.now() }),
+            };
+          }),
 
-      editMessage: (conversationId: string, messageId: string, updatedMessage: Partial<DMessage>, setUpdated: boolean) =>
-        get()._editConversation(conversationId, conversation => {
-
-          const chatLLMId = useModelsStore.getState().chatLLMId;
-          const messages = conversation.messages.map((message: DMessage): DMessage =>
-            message.id === messageId
-              ? {
-                ...message,
-                ...updatedMessage,
-                ...(setUpdated && { updated: Date.now() }),
-                ...(((updatedMessage.typing === false || !message.typing) && chatLLMId && {
-                  tokenCount: countModelTokens(updatedMessage.text || message.text, chatLLMId, 'editMessage(typing=false)'),
-                })),
-              }
-              : message);
-
-          return {
-            messages,
-            tokenCount: messages.reduce((sum, message) => sum + 4 + message.tokenCount || 0, 3),
-            ...(setUpdated && { updated: Date.now() }),
-          };
-        }),
-
-      setSystemPurposeId: (conversationId: string, systemPurposeId: SystemPurposeId) =>
-        get()._editConversation(conversationId,
-          {
+        setSystemPurposeId: (conversationId: string, systemPurposeId: SystemPurposeId) =>
+          get()._editConversation(conversationId, {
             systemPurposeId,
           }),
 
-      setAutoTitle: (conversationId: string, autoTitle: string) =>
-        get()._editConversation(conversationId,
-          {
+        setAutoTitle: (conversationId: string, autoTitle: string) =>
+          get()._editConversation(conversationId, {
             autoTitle,
           }),
 
-      setUserTitle: (conversationId: string, userTitle: string) =>
-        get()._editConversation(conversationId,
-          {
+        setUserTitle: (conversationId: string, userTitle: string) =>
+          get()._editConversation(conversationId, {
             userTitle,
           }),
 
-      appendEphemeral: (conversationId: string, ephemeral: DEphemeral) =>
-        get()._editConversation(conversationId, conversation => {
-          const ephemerals = [...conversation.ephemerals, ephemeral];
-          return {
-            ephemerals,
-          };
-        }),
+        appendEphemeral: (conversationId: string, ephemeral: DEphemeral) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const ephemerals = [...conversation.ephemerals, ephemeral];
+            return {
+              ephemerals,
+            };
+          }),
 
-      deleteEphemeral: (conversationId: string, ephemeralId: string) =>
-        get()._editConversation(conversationId, conversation => {
-          const ephemerals = conversation.ephemerals?.filter((e: DEphemeral): boolean => e.id !== ephemeralId) || [];
-          return {
-            ephemerals,
-          };
-        }),
+        deleteEphemeral: (conversationId: string, ephemeralId: string) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const ephemerals = conversation.ephemerals?.filter((e: DEphemeral): boolean => e.id !== ephemeralId) || [];
+            return {
+              ephemerals,
+            };
+          }),
 
-      updateEphemeralText: (conversationId: string, ephemeralId: string, text: string) =>
-        get()._editConversation(conversationId, conversation => {
-          const ephemerals = conversation.ephemerals?.map((e: DEphemeral): DEphemeral =>
-            e.id === ephemeralId
-              ? { ...e, text }
-              : e) || [];
-          return {
-            ephemerals,
-          };
-        }),
+        updateEphemeralText: (conversationId: string, ephemeralId: string, text: string) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const ephemerals = conversation.ephemerals?.map((e: DEphemeral): DEphemeral => (e.id === ephemeralId ? { ...e, text } : e)) || [];
+            return {
+              ephemerals,
+            };
+          }),
 
-      updateEphemeralState: (conversationId: string, ephemeralId: string, state: object) =>
-        get()._editConversation(conversationId, conversation => {
-          const ephemerals = conversation.ephemerals?.map((e: DEphemeral): DEphemeral =>
-            e.id === ephemeralId
-              ? { ...e, state: state }
-              : e) || [];
-          return {
-            ephemerals,
-          };
-        }),
+        updateEphemeralState: (conversationId: string, ephemeralId: string, state: object) =>
+          get()._editConversation(conversationId, (conversation) => {
+            const ephemerals = conversation.ephemerals?.map((e: DEphemeral): DEphemeral => (e.id === ephemeralId ? { ...e, state: state } : e)) || [];
+            return {
+              ephemerals,
+            };
+          }),
 
-      _editConversation: (conversationId: string, update: Partial<DConversation> | ((conversation: DConversation) => Partial<DConversation>)) =>
-        set(state => ({
-          conversations: state.conversations.map((conversation: DConversation): DConversation =>
-            conversation.id === conversationId
-              ? {
-                ...conversation,
-                ...(typeof update === 'function' ? update(conversation) : update),
-              }
-              : conversation),
-        })),
-
-    }),
-    {
-      name: 'app-chats',
-      /* Version history:
-       *  - 1: [2023-03-18] App launch, single chat
-       *  - 2: [2023-04-10] Multi-chat version - invalidating data to be sure
-       *  - 3: [2023-09-19] Switch to IndexedDB - no data shape change,
-       *                    but we swapped the backend (localStorage -> IndexedDB)
-       */
-      version: 3,
-      storage: createJSONStorage(() => idbStateStorage),
-
-      // Migrations
-      migrate: (persistedState: unknown, fromVersion: number): ChatState & ChatActions => {
-        // -1 -> 3: migration loading from localStorage to IndexedDB
-        if (fromVersion === IDB_MIGRATION_INITIAL)
-          return _migrateLocalStorageData() as any;
-
-        // other: just proceed
-        return persistedState as any;
-      },
-
-      // Pre-Saving: remove transient properties
-      partialize: (state) => ({
-        ...state,
-        conversations: state.conversations.map((conversation: DConversation) => {
-          const {
-            abortController, ephemerals,
-            ...rest
-          } = conversation;
-          return rest;
-        }),
+        _editConversation: (conversationId: string, update: Partial<DConversation> | ((conversation: DConversation) => Partial<DConversation>)) =>
+          set((state) => ({
+            conversations: state.conversations.map(
+              (conversation: DConversation): DConversation =>
+                conversation.id === conversationId
+                  ? {
+                      ...conversation,
+                      ...(typeof update === 'function' ? update(conversation) : update),
+                    }
+                  : conversation,
+            ),
+          })),
       }),
+      {
+        name: 'app-chats',
+        /* Version history:
+         *  - 1: [2023-03-18] App launch, single chat
+         *  - 2: [2023-04-10] Multi-chat version - invalidating data to be sure
+         *  - 3: [2023-09-19] Switch to IndexedDB - no data shape change,
+         *                    but we swapped the backend (localStorage -> IndexedDB)
+         */
+        version: 3,
+        storage: createJSONStorage(() => idbStateStorage),
 
-      // Post-Loading: re-add transient properties and cleanup state
-      onRehydrateStorage: () => (state) => {
-        if (!state) return;
+        // Migrations
+        migrate: (persistedState: unknown, fromVersion: number): ChatState & ChatActions => {
+          // -1 -> 3: migration loading from localStorage to IndexedDB
+          if (fromVersion === IDB_MIGRATION_INITIAL) return _migrateLocalStorageData() as any;
 
-        // fixup state
-        for (const conversation of (state.conversations || [])) {
-          // reset the typing flag
-          for (const message of conversation.messages)
-            message.typing = false;
+          // other: just proceed
+          return persistedState as any;
+        },
 
-          // rehydrate the transient properties
-          conversation.abortController = null;
-          conversation.ephemerals = [];
-        }
+        // Pre-Saving: remove transient properties
+        partialize: (state) => ({
+          ...state,
+          conversations: state.conversations.map((conversation: DConversation) => {
+            const { abortController, ephemerals, ...rest } = conversation;
+            return rest;
+          }),
+        }),
 
-        // select the first conversation if none is selected
-        if (!state.activeConversationId && state.conversations.length)
-          state.activeConversationId = state.conversations[0].id;
+        // Post-Loading: re-add transient properties and cleanup state
+        onRehydrateStorage: () => (state) => {
+          if (!state) return;
+
+          // fixup state
+          for (const conversation of state.conversations || []) {
+            // reset the typing flag
+            for (const message of conversation.messages) message.typing = false;
+
+            // rehydrate the transient properties
+            conversation.abortController = null;
+            conversation.ephemerals = [];
+          }
+
+          // select the first conversation if none is selected
+          if (!state.activeConversationId && state.conversations.length) state.activeConversationId = state.conversations[0].id;
+        },
       },
-
-    }),
-  {
-    name: 'AppChats',
-    enabled: false,
-  }),
+    ),
+    {
+      name: 'AppChats',
+      enabled: false,
+    },
+  ),
 );
 
-
-export const conversationTitle = (conversation: DConversation, fallback?: string): string =>
-  conversation.userTitle || conversation.autoTitle || fallback || ''; // 👋💬🗨️
-
+export const conversationTitle = (conversation: DConversation, fallback?: string): string => conversation.userTitle || conversation.autoTitle || fallback || ''; // 👋💬🗨️
 
 /**
  * Returns the chats stored in the localStorage, and rename the key for
@@ -513,8 +477,7 @@ function _migrateLocalStorageData(): ChatState | {} {
  * Convenience function to count the tokens in a DMessage object
  */
 function updateDMessageTokenCount(message: DMessage, llmId: DLLMId | null, forceUpdate: boolean, debugFrom: string): number {
-  if (forceUpdate || !message.tokenCount)
-    message.tokenCount = llmId ? countModelTokens(message.text, llmId, debugFrom) : 0;
+  if (forceUpdate || !message.tokenCount) message.tokenCount = llmId ? countModelTokens(message.text, llmId, debugFrom) : 0;
   return message.tokenCount;
 }
 

@@ -17,7 +17,6 @@ import { loadAllConversationsFromJson } from '../trade.client';
 
 import { ImportedOutcome, ImportOutcomeModal } from './ImportOutcomeModal';
 
-
 export type ImportConfig = { dir: 'import' };
 
 /**
@@ -25,7 +24,6 @@ export type ImportConfig = { dir: 'import' };
  * Supports our own JSON files, and ChatGPT Share Links
  */
 export function ImportConversations(props: { onClose: () => void }) {
-
   // state
   const [chatGptEdit, setChatGptEdit] = React.useState(false);
   const [chatGptUrl, setChatGptUrl] = React.useState('');
@@ -60,8 +58,7 @@ export function ImportConversations(props: { onClose: () => void }) {
 
     // import conversations (warning - will overwrite things)
     for (const conversation of [...outcome.conversations].reverse()) {
-      if (conversation.success)
-        useChatStore.getState().importConversation(conversation.conversation, false);
+      if (conversation.success) useChatStore.getState().importConversation(conversation.conversation, false);
     }
 
     // show the outcome of the import
@@ -71,8 +68,7 @@ export function ImportConversations(props: { onClose: () => void }) {
   const handleChatGptToggleShown = () => setChatGptEdit(!chatGptEdit);
 
   const handleChatGptLoadFromURL = async () => {
-    if (!chatGptUrlValid)
-      return;
+    if (!chatGptUrlValid) return;
 
     const outcome: ImportedOutcome = { conversations: [] };
 
@@ -92,29 +88,29 @@ export function ImportConversations(props: { onClose: () => void }) {
     conversation.created = Math.round(data.create_time * 1000);
     conversation.updated = Math.round(data.update_time * 1000);
     conversation.autoTitle = data.title;
-    conversation.messages = data.linear_conversation.map(msgNode => {
-      const message = msgNode.message;
-      if (message?.content.parts) {
-        const role = message.author.role;
-        const joinedText = message.content.parts.join('\n');
-        if ((role === 'user' || role === 'assistant') && joinedText.length >= 1) {
-          const dMessage = createDMessage(role, joinedText);
-          dMessage.id = message.id;
-          if (message.create_time)
-            dMessage.created = Math.round(message.create_time * 1000);
-          return dMessage;
+    conversation.messages = data.linear_conversation
+      .map((msgNode) => {
+        const message = msgNode.message;
+        if (message?.content.parts) {
+          const role = message.author.role;
+          const joinedText = message.content.parts.join('\n');
+          if ((role === 'user' || role === 'assistant') && joinedText.length >= 1) {
+            const dMessage = createDMessage(role, joinedText);
+            dMessage.id = message.id;
+            if (message.create_time) dMessage.created = Math.round(message.create_time * 1000);
+            return dMessage;
+          }
         }
-      }
-      return null;
-    }).filter(msg => !!msg) as DMessage[];
+        return null;
+      })
+      .filter((msg) => !!msg) as DMessage[];
 
     // outcome
     const success = conversation.messages.length >= 1;
     if (success) {
       useChatStore.getState().importConversation(conversation, false);
       outcome.conversations.push({ success: true, fileName: 'chatgpt', conversation });
-    } else
-      outcome.conversations.push({ success: false, fileName: 'chatgpt', error: `Empty conversation` });
+    } else outcome.conversations.push({ success: false, fileName: 'chatgpt', error: `Empty conversation` });
     setImportOutcome(outcome);
   };
 
@@ -123,58 +119,68 @@ export function ImportConversations(props: { onClose: () => void }) {
     props.onClose();
   };
 
+  return (
+    <>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', py: 1 }}>
+        <Typography level="body-sm">Select where to import from</Typography>
 
-  return <>
-
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center', py: 1 }}>
-      <Typography level='body-sm'>
-        Select where to import from
-      </Typography>
-
-      <Button variant='soft' size='md' endDecorator={<FileUploadIcon />} sx={{ minWidth: 240, justifyContent: 'space-between' }}
-              onClick={handleImportFromFiles}>
-        Upload JSON
-      </Button>
-
-      {!chatGptEdit && (
-        <Button variant='soft' size='md' endDecorator={<OpenAIIcon />} sx={{ minWidth: 240, justifyContent: 'space-between' }}
-                color={chatGptEdit ? 'neutral' : 'primary'}
-                onClick={handleChatGptToggleShown}>
-          ChatGPT shared link
+        <Button
+          variant="soft"
+          size="md"
+          endDecorator={<FileUploadIcon />}
+          sx={{ minWidth: 240, justifyContent: 'space-between' }}
+          onClick={handleImportFromFiles}
+        >
+          Upload JSON
         </Button>
+
+        {!chatGptEdit && (
+          <Button
+            variant="soft"
+            size="md"
+            endDecorator={<OpenAIIcon />}
+            sx={{ minWidth: 240, justifyContent: 'space-between' }}
+            color={chatGptEdit ? 'neutral' : 'primary'}
+            onClick={handleChatGptToggleShown}
+          >
+            ChatGPT shared link
+          </Button>
+        )}
+      </Box>
+
+      {/* [chatgpt] data & controls */}
+      {chatGptEdit && (
+        <Sheet variant="soft" color="primary" sx={{ display: 'flex', flexDirection: 'column', borderRadius: 'md', p: 1, gap: 1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+            <InlineError error="Note: this operation may be unreliable as OpenAI is often blocking imports." severity="warning" />
+            <OpenAIIcon sx={{ mx: 'auto', my: 1 }} />
+          </Box>
+
+          <FormControl>
+            <FormLabelStart title="Shared Chat URL" />
+            <Input
+              variant="outlined"
+              placeholder="https://chat.openai.com/share/..."
+              required
+              error={!chatGptUrlValid}
+              value={chatGptUrl}
+              onChange={(event) => setChatGptUrl(event.target.value)}
+            />
+          </FormControl>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="soft" color="primary" onClick={handleChatGptToggleShown} sx={{ mr: 'auto' }}>
+              Cancel
+            </Button>
+            <Button color="primary" disabled={!chatGptUrlValid} onClick={handleChatGptLoadFromURL} sx={{ minWidth: 150 }}>
+              Import Chat
+            </Button>
+          </Box>
+        </Sheet>
       )}
-    </Box>
 
-    {/* [chatgpt] data & controls */}
-    {chatGptEdit && <Sheet variant='soft' color='primary' sx={{ display: 'flex', flexDirection: 'column', borderRadius: 'md', p: 1, gap: 1 }}>
-
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-        <InlineError error='Note: this operation may be unreliable as OpenAI is often blocking imports.' severity='warning' />
-        <OpenAIIcon sx={{ mx: 'auto', my: 1 }} />
-      </Box>
-
-      <FormControl>
-        <FormLabelStart title='Shared Chat URL' />
-        <Input
-          variant='outlined' placeholder='https://chat.openai.com/share/...'
-          required error={!chatGptUrlValid}
-          value={chatGptUrl} onChange={event => setChatGptUrl(event.target.value)}
-        />
-      </FormControl>
-
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button variant='soft' color='primary' onClick={handleChatGptToggleShown} sx={{ mr: 'auto' }}>
-          Cancel
-        </Button>
-        <Button color='primary' disabled={!chatGptUrlValid} onClick={handleChatGptLoadFromURL} sx={{ minWidth: 150 }}>
-          Import Chat
-        </Button>
-      </Box>
-
-    </Sheet>}
-
-    {/* import outcome */}
-    {!!importOutcome && <ImportOutcomeModal outcome={importOutcome} onClose={handleImportOutcomeClosed} />}
-
-  </>;
+      {/* import outcome */}
+      {!!importOutcome && <ImportOutcomeModal outcome={importOutcome} onClose={handleImportOutcomeClosed} />}
+    </>
+  );
 }

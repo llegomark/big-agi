@@ -1,6 +1,5 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
-
 
 // App State
 
@@ -17,30 +16,27 @@ interface AppStateActions {
   resetSuppressedItems: () => void;
 }
 
-
-export const useAppStateStore = create<AppStateData & AppStateActions>()(
+export const useAppStateStore = createWithEqualityFn<AppStateData & AppStateActions>()(
   persist(
     (set) => ({
-
       usageCount: 0,
       lastSeenNewsVersion: 0,
       suppressedItems: {},
 
       setLastSeenNewsVersion: (version: number) => set({ lastSeenNewsVersion: version }),
 
-      suppressItem: (key: string) => set((state) => ({
-        suppressedItems: {
-          ...state.suppressedItems,
-          [key]: true,
-        },
-      })),
-      unSuppressItem: (key: string) => set((state) => {
-        const {
-          [key]: _,
-          ...rest
-        } = state.suppressedItems;
-        return { suppressedItems: rest };
-      }),
+      suppressItem: (key: string) =>
+        set((state) => ({
+          suppressedItems: {
+            ...state.suppressedItems,
+            [key]: true,
+          },
+        })),
+      unSuppressItem: (key: string) =>
+        set((state) => {
+          const { [key]: _, ...rest } = state.suppressedItems;
+          return { suppressedItems: rest };
+        }),
       resetSuppressedItems: () => set({ suppressedItems: {} }),
     }),
     {

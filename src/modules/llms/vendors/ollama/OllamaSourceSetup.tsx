@@ -14,15 +14,12 @@ import { ModelVendorOllama } from './ollama.vendor';
 import { OllamaAdmin } from './OllamaAdmin';
 import { modelDescriptionToDLLM } from '../openai/OpenAISourceSetup';
 
-
 export function OllamaSourceSetup(props: { sourceId: DModelSourceId }) {
-
   // state
   const [adminOpen, setAdminOpen] = React.useState(false);
 
   // external state
-  const { source, access, updateSetup } =
-    useSourceSetup(props.sourceId, ModelVendorOllama.getAccess);
+  const { source, access, updateSetup } = useSourceSetup(props.sourceId, ModelVendorOllama.getAccess);
 
   // derived state
   const { ollamaHost } = access;
@@ -32,38 +29,49 @@ export function OllamaSourceSetup(props: { sourceId: DModelSourceId }) {
   const shallFetchSucceed = !hostError;
 
   // fetch models
-  const { isFetching, refetch, isError, error } = apiQuery.llmOllama.listModels.useQuery({ access }, {
-    enabled: false, // !sourceHasLLMs && shallFetchSucceed,
-    onSuccess: models => source && useModelsStore.getState().setLLMs(
-      models.models.map(model => modelDescriptionToDLLM(model, source)),
-      props.sourceId,
-    ),
-    staleTime: Infinity,
-  });
+  const { isFetching, refetch, isError, error } = apiQuery.llmOllama.listModels.useQuery(
+    { access },
+    {
+      enabled: false, // !sourceHasLLMs && shallFetchSucceed,
+      onSuccess: (models) =>
+        source &&
+        useModelsStore.getState().setLLMs(
+          models.models.map((model) => modelDescriptionToDLLM(model, source)),
+          props.sourceId,
+        ),
+      staleTime: Infinity,
+    },
+  );
 
-  return <>
+  return (
+    <>
+      <FormTextField
+        title="Ollama Host"
+        description={
+          <Link level="body-sm" href="https://ollama.ai/" target="_blank">
+            information
+          </Link>
+        }
+        placeholder="http://127.0.0.1:11434"
+        isError={hostError}
+        value={ollamaHost || ''}
+        onChange={(text) => updateSetup({ ollamaHost: text })}
+      />
 
-    <FormTextField
-      title='Ollama Host'
-      description={<Link level='body-sm' href='https://github.com/enricoros/big-agi/blob/main/docs/config-ollama.md' target='_blank'>information</Link>}
-      placeholder='http://127.0.0.1:11434'
-      isError={hostError}
-      value={ollamaHost || ''}
-      onChange={text => updateSetup({ ollamaHost: text })}
-    />
+      <SetupFormRefetchButton
+        refetch={refetch}
+        disabled={!shallFetchSucceed || isFetching}
+        error={isError}
+        leftButton={
+          <Button color="neutral" variant="solid" disabled={adminOpen} onClick={() => setAdminOpen(true)}>
+            Ollama Admin
+          </Button>
+        }
+      />
 
-    <SetupFormRefetchButton
-      refetch={refetch} disabled={!shallFetchSucceed || isFetching} error={isError}
-      leftButton={
-        <Button color='neutral' variant='solid' disabled={adminOpen} onClick={() => setAdminOpen(true)}>
-          Ollama Admin
-        </Button>
-      }
-    />
+      {isError && <InlineError error={error} />}
 
-    {isError && <InlineError error={error} />}
-
-    {adminOpen && <OllamaAdmin access={access} onClose={() => setAdminOpen(false)} />}
-
-  </>;
+      {adminOpen && <OllamaAdmin access={access} onClose={() => setAdminOpen(false)} />}
+    </>
+  );
 }

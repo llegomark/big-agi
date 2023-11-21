@@ -1,6 +1,5 @@
 import type { EmotionCache } from '@emotion/react';
 
-
 // export type GetLayout = (page: ReactElement) => ReactNode;
 
 // Extend the NextPage type with an optional getLayout function

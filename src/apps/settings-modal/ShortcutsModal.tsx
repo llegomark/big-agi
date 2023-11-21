@@ -6,7 +6,6 @@ import { GoodModal } from '~/common/components/GoodModal';
 import { createDMessage } from '~/common/state/store-chats';
 import { platformAwareKeystrokes } from '~/common/components/KeyStroke';
 
-
 const shortcutsMd = `
 
 | Shortcut         | Description                                     |
@@ -30,11 +29,8 @@ const shortcutsMd = `
 
 const shortcutsMessage = createDMessage('assistant', platformAwareKeystrokes(shortcutsMd));
 
-
-export const ShortcutsModal = (props: { onClose: () => void }) =>
-  <GoodModal
-    open title='Desktop Shortcuts' 
-    onClose={props.onClose}
-  >
+export const ShortcutsModal = (props: { onClose: () => void }) => (
+  <GoodModal open title="Desktop Shortcuts" onClose={props.onClose}>
     <ChatMessage message={shortcutsMessage} hideAvatars noBottomBorder sx={{ p: 0, m: 0 }} />
-  </GoodModal>;
+  </GoodModal>
+);

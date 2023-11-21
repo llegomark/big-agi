@@ -19,29 +19,35 @@ import { AppChatLinkDrawerItems } from './AppChatLinkDrawerItems';
 import { AppChatLinkMenuItems } from './AppChatLinkMenuItems';
 import { ViewChatLink } from './ViewChatLink';
 
-
-const Centerer = (props: { backgroundColor: string, children?: React.ReactNode }) =>
-  <Box sx={{
-    backgroundColor: props.backgroundColor,
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    flexGrow: 1,
-  }}>
+const Centerer = (props: { backgroundColor: string; children?: React.ReactNode }) => (
+  <Box
+    sx={{
+      backgroundColor: props.backgroundColor,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexGrow: 1,
+    }}
+  >
     {props.children}
-  </Box>;
+  </Box>
+);
 
-const ShowLoading = () =>
-  <Centerer backgroundColor='background.level3'>
+const ShowLoading = () => (
+  <Centerer backgroundColor="background.level3">
     <LogoProgress showProgress={true} />
-    <Typography level='title-sm' sx={{ mt: 2 }}>
+    <Typography level="title-sm" sx={{ mt: 2 }}>
       Loading Chat...
     </Typography>
-  </Centerer>;
+  </Centerer>
+);
 
-const ShowError = (props: { error: any }) =>
-  <Centerer backgroundColor='background.level2'>
-    <InlineError error={props.error} severity='warning' />
-  </Centerer>;
-
+const ShowError = (props: { error: any }) => (
+  <Centerer backgroundColor="background.level2">
+    <InlineError error={props.error} severity="warning" />
+  </Centerer>
+);
 
 /**
  * Fetches the object using tRPC
@@ -51,25 +57,20 @@ const ShowError = (props: { error: any }) =>
 async function fetchStoredChatV1(objectId: string) {
   // fetch
   const result = await apiAsyncNode.trade.storageGet.query({ objectId });
-  if (result.type === 'error')
-    throw result.error;
+  if (result.type === 'error') throw result.error;
 
   // validate a CHAT_V1
   const { dataType, dataObject, storedAt, expiresAt } = result;
-  if (dataType !== 'CHAT_V1')
-    throw new Error('Unsupported data type: ' + dataType);
+  if (dataType !== 'CHAT_V1') throw new Error('Unsupported data type: ' + dataType);
 
   // convert to DConversation
   const restored = createConversationFromJsonV1(dataObject as any);
-  if (!restored)
-    throw new Error('Could not restore conversation');
+  if (!restored) throw new Error('Could not restore conversation');
 
   return { conversation: restored, storedAt, expiresAt };
 }
 
-
 export function AppChatLink(props: { linkId: string }) {
-
   // external state
   const { data, isError, error, isLoading } = useQuery({
     enabled: !!props.linkId,
@@ -80,29 +81,31 @@ export function AppChatLink(props: { linkId: string }) {
   });
   const hasLinkItems = useHasChatLinkItems();
 
-
   // pluggable UI
 
   const drawerItems = React.useMemo(() => <AppChatLinkDrawerItems />, []);
   const menuItems = React.useMemo(() => <AppChatLinkMenuItems />, []);
   useLayoutPluggable(null, hasLinkItems ? drawerItems : null, menuItems);
 
-
   const pageTitle = (data?.conversation && conversationTitle(data.conversation)) || 'Chat Link';
 
-  return <>
+  return (
+    <>
+      <Head>
+        <title>
+          {capitalizeFirstLetter(pageTitle)} · {Brand.Title.Base} 🚀
+        </title>
+      </Head>
 
-    <Head>
-      <title>{capitalizeFirstLetter(pageTitle)} · {Brand.Title.Base} 🚀</title>
-    </Head>
-
-    {isLoading
-      ? <ShowLoading />
-      : isError
-        ? <ShowError error={error} />
-        : !!data?.conversation
-          ? <ViewChatLink conversation={data.conversation} storedAt={data.storedAt} expiresAt={data.expiresAt} />
-          : <Centerer backgroundColor='background.level3' />}
-
-  </>;
+      {isLoading ? (
+        <ShowLoading />
+      ) : isError ? (
+        <ShowError error={error} />
+      ) : !!data?.conversation ? (
+        <ViewChatLink conversation={data.conversation} storedAt={data.storedAt} expiresAt={data.expiresAt} />
+      ) : (
+        <Centerer backgroundColor="background.level3" />
+      )}
+    </>
+  );
 }

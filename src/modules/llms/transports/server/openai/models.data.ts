@@ -1,7 +1,6 @@
 import type { ModelDescriptionSchema } from '../server.schemas';
 import { LLM_IF_OAI_Chat, LLM_IF_OAI_Complete, LLM_IF_OAI_Fn, LLM_IF_OAI_Vision } from '../../../store-llms';
 
-
 // [Azure] / [OpenAI]
 const _knownOpenAIChatModels: ManualMappings = [
   // GPT4 Turbo
@@ -74,7 +73,6 @@ const _knownOpenAIChatModels: ManualMappings = [
     hidden: true,
   },
 
-
   // 3.5-Turbo-16k's
   {
     idPrefix: 'gpt-3.5-turbo-1106',
@@ -138,7 +136,6 @@ const _knownOpenAIChatModels: ManualMappings = [
     interfaces: [LLM_IF_OAI_Chat],
   },
 
-
   // Azure variants - because someone forgot the dot
   {
     idPrefix: 'gpt-35-turbo-16k',
@@ -170,7 +167,6 @@ export function openAIModelToModelDescription(modelId: string, modelCreated: num
   return fromManualMapping(_knownOpenAIChatModels, modelId, modelCreated, modelUpdated);
 }
 
-
 // [LocalAI]
 const _knownLocalAIChatModels: ManualMappings = [
   {
@@ -192,28 +188,25 @@ const _knownLocalAIChatModels: ManualMappings = [
 export function localAIModelToModelDescription(modelId: string): ModelDescriptionSchema {
   return fromManualMapping(_knownLocalAIChatModels, modelId, undefined, undefined, {
     idPrefix: modelId,
-    label: modelId
-      .replace('ggml-', '')
-      .replace('.bin', '')
-      .replaceAll('-', ' '),
+    label: modelId.replace('ggml-', '').replace('.bin', '').replaceAll('-', ' '),
     description: 'Unknown localAI model. Please update `models.data.ts` with this ID',
     contextWindow: 4096, // sensible default
     interfaces: [LLM_IF_OAI_Chat], // assume..
   });
 }
 
-
 // [Oobabooga]
 const _knownOobaboogaChatModels: ManualMappings = [];
 
-const _knownOobaboogaNonChatModels: string[] = [
-  'None', 'text-curie-001', 'text-davinci-002', 'all-mpnet-base-v2', 'gpt-3.5-turbo', 'text-embedding-ada-002',
-];
+const _knownOobaboogaNonChatModels: string[] = ['None', 'text-curie-001', 'text-davinci-002', 'all-mpnet-base-v2', 'gpt-3.5-turbo', 'text-embedding-ada-002'];
 
 export function oobaboogaModelToModelDescription(modelId: string, created: number): ModelDescriptionSchema {
-  let label = modelId.replaceAll(/[_-]/g, ' ').split(' ').map(word => word[0].toUpperCase() + word.slice(1)).join(' ');
-  if (label.endsWith('.bin'))
-    label = label.slice(0, -4);
+  let label = modelId
+    .replaceAll(/[_-]/g, ' ')
+    .split(' ')
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ');
+  if (label.endsWith('.bin')) label = label.slice(0, -4);
 
   return fromManualMapping(_knownOobaboogaChatModels, modelId, created, undefined, {
     idPrefix: modelId,
@@ -224,7 +217,6 @@ export function oobaboogaModelToModelDescription(modelId: string, created: numbe
     hidden: _knownOobaboogaNonChatModels.includes(modelId),
   });
 }
-
 
 // [OpenRouter]
 
@@ -240,7 +232,7 @@ export function oobaboogaModelToModelDescription(modelId: string, created: numbe
  *  - cc: cost per 1k completion tokens
  *  - old: if true, this is an older model that has been superseded by a newer one
  */
-const orModelMap: { [id: string]: { name: string; cw: number; cp: number; cc: number; old?: boolean; unfilt?: boolean; } } = {
+const orModelMap: { [id: string]: { name: string; cw: number; cp: number; cc: number; old?: boolean; unfilt?: boolean } } = {
   'huggingfaceh4/zephyr-7b-beta': { name: 'Hugging Face: Zephyr 7B (beta)', cw: 4096, cp: 0, cc: 0, unfilt: true },
   'mistralai/mistral-7b-instruct': { name: 'Mistral 7B Instruct v0.1 (beta)', cw: 8192, cp: 0, cc: 0, unfilt: true },
   'openai/gpt-3.5-turbo': { name: 'OpenAI: GPT-3.5 Turbo', cw: 4095, cp: 0.0015, cc: 0.002 },
@@ -286,24 +278,21 @@ const orModelMap: { [id: string]: { name: string; cw: number; cp: number; cc: nu
 const orModelFamilyOrder = ['mistralai/', 'huggingfaceh4/', 'openai/', 'anthropic/', 'google/', 'meta-llama/', 'phind/'];
 
 export function openRouterModelFamilySortFn(a: { id: string }, b: { id: string }): number {
-  const aPrefixIndex = orModelFamilyOrder.findIndex(prefix => a.id.startsWith(prefix));
-  const bPrefixIndex = orModelFamilyOrder.findIndex(prefix => b.id.startsWith(prefix));
+  const aPrefixIndex = orModelFamilyOrder.findIndex((prefix) => a.id.startsWith(prefix));
+  const bPrefixIndex = orModelFamilyOrder.findIndex((prefix) => b.id.startsWith(prefix));
 
   // If both have a prefix, sort by prefix first, and then alphabetically
-  if (aPrefixIndex !== -1 && bPrefixIndex !== -1)
-    return aPrefixIndex !== bPrefixIndex ? aPrefixIndex - bPrefixIndex : a.id.localeCompare(b.id);
+  if (aPrefixIndex !== -1 && bPrefixIndex !== -1) return aPrefixIndex !== bPrefixIndex ? aPrefixIndex - bPrefixIndex : a.id.localeCompare(b.id);
 
   // If one has a prefix and the other doesn't, prioritize the one with prefix
   return aPrefixIndex !== -1 ? -1 : 1;
 }
 
 export function openRouterModelToModelDescription(modelId: string, created: number, context_length?: number): ModelDescriptionSchema {
-
   // label: use the known name if available, otherwise format the model id
   const orModel = orModelMap[modelId] ?? null;
   let label = orModel?.name || modelId.replace('/', ' · ');
-  if (orModel?.cp === 0 && orModel?.cc === 0)
-    label += ' - 🎁 Free';
+  if (orModel?.cp === 0 && orModel?.cc === 0) label += ' - 🎁 Free';
 
   // if (!orModel)
   //   console.log('openRouterModelToModelDescription: unknown model id:', modelId);
@@ -312,7 +301,7 @@ export function openRouterModelToModelDescription(modelId: string, created: numb
   const contextWindow = orModel?.cw || context_length || 4096;
 
   // hidden: hide by default older models or models not in known families
-  const hidden = orModel?.old || !orModelFamilyOrder.some(prefix => modelId.startsWith(prefix));
+  const hidden = orModel?.old || !orModelFamilyOrder.some((prefix) => modelId.startsWith(prefix));
 
   return fromManualMapping([], modelId, created, undefined, {
     idPrefix: modelId,
@@ -324,16 +313,14 @@ export function openRouterModelToModelDescription(modelId: string, created: numb
   });
 }
 
-
 // Helpers
 
 type ManualMappings = ManualMapping[];
-type ManualMapping = ({ idPrefix: string, latest?: boolean } & Omit<ModelDescriptionSchema, 'id' | 'created' | 'updated'>);
+type ManualMapping = { idPrefix: string; latest?: boolean } & Omit<ModelDescriptionSchema, 'id' | 'created' | 'updated'>;
 
 function fromManualMapping(mappings: ManualMappings, id: string, created?: number, updated?: number, fallback?: ManualMapping): ModelDescriptionSchema {
-
   // find the closest known model, or fall back, or take the last
-  const known = mappings.find(base => id.startsWith(base.idPrefix)) || fallback || mappings[mappings.length - 1];
+  const known = mappings.find((base) => id.startsWith(base.idPrefix)) || fallback || mappings[mappings.length - 1];
 
   // check whether this is a partial map, which indicates an unknown/new variant
   const suffix = id.slice(known.idPrefix.length).trim();
@@ -348,6 +335,6 @@ function fromManualMapping(mappings: ManualMappings, id: string, created?: numbe
     contextWindow: known.contextWindow,
     ...(!!known.maxCompletionTokens && { maxCompletionTokens: known.maxCompletionTokens }),
     interfaces: known.interfaces,
-    ...(!!known.hidden && { hidden: known.hidden })
+    ...(!!known.hidden && { hidden: known.hidden }),
   };
 }

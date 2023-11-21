@@ -9,7 +9,6 @@
  *  - tba
  */
 
-
 /// Speech Recognition (browser)
 
 export interface CapabilityBrowserSpeechRecognition {
@@ -21,7 +20,6 @@ export interface CapabilityBrowserSpeechRecognition {
 
 export { browserSpeechRecognitionCapability as useCapabilityBrowserSpeechRecognition } from './useSpeechRecognition';
 
-
 /// Speech Synthesis: ElevenLabs
 
 export interface CapabilityElevenLabsSpeechSynthesis {
@@ -31,7 +29,6 @@ export interface CapabilityElevenLabsSpeechSynthesis {
 }
 
 export { useCapability as useCapabilityElevenLabs } from '~/modules/elevenlabs/elevenlabs.client';
-
 
 /// Image Generation: Prodia
 

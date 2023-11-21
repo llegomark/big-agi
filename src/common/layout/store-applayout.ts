@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { shallow } from 'zustand/shallow';
 
 import type { DLLMId } from '~/modules/llms/store-llms';
 
 interface AppLayoutStore {
-
   // pluggable UI
   drawerItems: React.JSX.Element | null;
   centerItems: React.JSX.Element | null;
@@ -19,26 +18,20 @@ interface AppLayoutStore {
   preferencesTab: number; // 0: closed, 1..N: tab index
   modelsSetupOpen: boolean;
   llmOptionsId: DLLMId | null;
-
 }
 
-const useAppLayoutStore = create<AppLayoutStore>()(
-  () => ({
+const useAppLayoutStore = createWithEqualityFn<AppLayoutStore>()(() => ({
+  drawerItems: null,
+  centerItems: null,
+  menuItems: null,
 
-    drawerItems: null,
-    centerItems: null,
-    menuItems: null,
+  drawerAnchor: null,
+  menuAnchor: null,
 
-    drawerAnchor: null,
-    menuAnchor: null,
-
-    preferencesTab: 0,
-    modelsSetupOpen: false,
-    llmOptionsId: null,
-
-  }),
-);
-
+  preferencesTab: 0,
+  modelsSetupOpen: false,
+  llmOptionsId: null,
+}));
 
 /**
  * used by the active UI client to register its components (and unregister on cleanup)
@@ -51,13 +44,16 @@ export function useLayoutPluggable(centerItems: React.JSX.Element | null, drawer
 }
 
 export function useLayoutComponents() {
-  return useAppLayoutStore(state => ({
-    drawerItems: state.drawerItems,
-    centerItems: state.centerItems,
-    menuItems: state.menuItems,
-    drawerAnchor: state.drawerAnchor,
-    menuAnchor: state.menuAnchor,
-  }), shallow);
+  return useAppLayoutStore(
+    (state) => ({
+      drawerItems: state.drawerItems,
+      centerItems: state.centerItems,
+      menuItems: state.menuItems,
+      drawerAnchor: state.drawerAnchor,
+      menuAnchor: state.menuAnchor,
+    }),
+    shallow,
+  );
 }
 
 export const setLayoutDrawerAnchor = (anchor: HTMLElement | null) => useAppLayoutStore.setState({ drawerAnchor: anchor });
@@ -66,11 +62,12 @@ export const closeLayoutDrawer = () => useAppLayoutStore.setState({ drawerAnchor
 export const setLayoutMenuAnchor = (anchor: HTMLElement) => useAppLayoutStore.setState({ menuAnchor: anchor });
 export const closeLayoutMenu = () => useAppLayoutStore.setState({ menuAnchor: null });
 
-export const useLayoutPreferencesTab = () => useAppLayoutStore(state => state.preferencesTab);
+export const useLayoutPreferencesTab = () => useAppLayoutStore((state) => state.preferencesTab);
 export const openLayoutPreferences = (tab?: number) => useAppLayoutStore.setState({ preferencesTab: tab || 1 });
 export const closeLayoutPreferences = () => useAppLayoutStore.setState({ preferencesTab: 0 });
 
-export const useLayoutModelsSetup = (): [open: boolean, llmId: DLLMId | null] => useAppLayoutStore(state => [state.modelsSetupOpen, state.llmOptionsId], shallow);
+export const useLayoutModelsSetup = (): [open: boolean, llmId: DLLMId | null] =>
+  useAppLayoutStore((state) => [state.modelsSetupOpen, state.llmOptionsId], shallow);
 export const openLayoutModelsSetup = () => useAppLayoutStore.setState({ modelsSetupOpen: true });
 export const closeLayoutModelsSetup = () => useAppLayoutStore.setState({ modelsSetupOpen: false });
 export const openLayoutLLMOptions = (llmId: DLLMId) => useAppLayoutStore.setState({ llmOptionsId: llmId });

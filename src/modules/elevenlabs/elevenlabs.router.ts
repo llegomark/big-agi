@@ -4,7 +4,6 @@ import { createTRPCRouter, publicProcedure } from '~/server/api/trpc.server';
 import { env } from '~/server/env.mjs';
 import { fetchJsonOrTRPCError } from '~/server/api/trpc.serverutils';
 
-
 export const speechInputSchema = z.object({
   elevenKey: z.string().optional(),
   text: z.string(),
@@ -35,9 +34,7 @@ const listVoicesOutputSchema = z.object({
   voices: z.array(voiceSchema),
 });
 
-
 export const elevenlabsRouter = createTRPCRouter({
-
   /**
    * List Voices available to this api key
    */
@@ -45,7 +42,6 @@ export const elevenlabsRouter = createTRPCRouter({
     .input(listVoicesInputSchema)
     .output(listVoicesOutputSchema)
     .query(async ({ input }) => {
-
       const { elevenKey } = input;
       const { headers, url } = elevenlabsAccess(elevenKey, '/v1/voices');
 
@@ -68,7 +64,6 @@ export const elevenlabsRouter = createTRPCRouter({
           default: idx === 0,
         })),
       };
-
     }),
 
   /**
@@ -91,22 +86,17 @@ export const elevenlabsRouter = createTRPCRouter({
       await rethrowElevenLabsError(response);
       return await response.arrayBuffer();
     }),*/
-
 });
 
-
-export function elevenlabsAccess(elevenKey: string | undefined, apiPath: string): { headers: HeadersInit, url: string } {
+export function elevenlabsAccess(elevenKey: string | undefined, apiPath: string): { headers: HeadersInit; url: string } {
   // API key
   elevenKey = (elevenKey || env.ELEVENLABS_API_KEY || '').trim();
-  if (!elevenKey)
-    throw new Error('Missing ElevenLabs API key.');
+  if (!elevenKey) throw new Error('Missing ElevenLabs API key.');
 
   // API host
   let host = (env.ELEVENLABS_API_HOST || 'api.elevenlabs.io').trim();
-  if (!host.startsWith('http'))
-    host = `https://${host}`;
-  if (host.endsWith('/') && apiPath.startsWith('/'))
-    host = host.slice(0, -1);
+  if (!host.startsWith('http')) host = `https://${host}`;
+  if (host.endsWith('/') && apiPath.startsWith('/')) host = host.slice(0, -1);
 
   return {
     headers: {
@@ -120,7 +110,6 @@ export function elevenlabsAccess(elevenKey: string | undefined, apiPath: string)
 export function elevenlabsVoiceId(voiceId?: string): string {
   return voiceId?.trim() || env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
 }
-
 
 /// This is the upstream API [rev-eng on 2023-04-12]
 export namespace ElevenlabsWire {

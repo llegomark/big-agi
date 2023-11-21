@@ -21,7 +21,7 @@ export function OpenInCodepen({ codeBlock }: CodeBlockProps): React.JSX.Element 
       css: hasCSS ? code : '',
       html: hasHTML ? code : '',
       js: hasJS ? code : '',
-      editors: `${hasHTML ? 1 : 0}${hasCSS ? 1 : 0}${hasJS ? 1 : 0}` // eg '101' for HTML, JS
+      editors: `${hasHTML ? 1 : 0}${hasCSS ? 1 : 0}${hasJS ? 1 : 0}`, // eg '101' for HTML, JS
     };
 
     const form = document.createElement('form');
@@ -41,8 +41,8 @@ export function OpenInCodepen({ codeBlock }: CodeBlockProps): React.JSX.Element 
   };
 
   return (
-    <Tooltip title='Open in Codepen' variant='solid'>
-      <Button variant='outlined' color='neutral' onClick={handleOpenInCodepen}>
+    <Tooltip title="Open in Codepen" variant="solid">
+      <Button variant="outlined" color="neutral" onClick={handleOpenInCodepen}>
         Codepen
       </Button>
     </Tooltip>

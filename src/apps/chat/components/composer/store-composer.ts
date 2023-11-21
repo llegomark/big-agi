@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
-
 
 export type ChatModeId = 'immediate' | 'write-user' | 'react' | 'draw-imagine' | 'draw-imagine-plus';
 
@@ -12,10 +11,10 @@ export const ChatModeItems: {
     label: string;
     description: string | React.JSX.Element;
     shortcut?: string;
-    experimental?: boolean
-  }
+    experimental?: boolean;
+  };
 } = {
-  'immediate': {
+  immediate: {
     label: 'Chat',
     description: 'Persona replies',
   },
@@ -33,28 +32,24 @@ export const ChatModeItems: {
     description: 'Assisted Image Generation',
     experimental: true,
   },
-  'react': {
+  react: {
     label: 'Reason + Act · α',
     description: 'Answers questions in multiple steps',
   },
 };
 
-
 /// Composer Store
 
 interface ComposerStore {
-
   startupText: string | null; // if not null, the composer will load this text at startup
   setStartupText: (text: string | null) => void;
-
 }
 
-const useComposerStore = create<ComposerStore>()(
-  persist((set, _get) => ({
-
+const useComposerStore = createWithEqualityFn<ComposerStore>()(
+  persist(
+    (set, _get) => ({
       startupText: null,
       setStartupText: (text: string | null) => set({ startupText: text }),
-
     }),
     {
       name: 'app-composer',
@@ -67,12 +62,11 @@ const useComposerStore = create<ComposerStore>()(
         }
         return state as ComposerStore;
       },*/
-    }),
+    },
+  ),
 );
 
-
 export const useComposerStartupText = (): [string | null, (text: string | null) => void] =>
-  useComposerStore(state => [state.startupText, state.setStartupText], shallow);
+  useComposerStore((state) => [state.startupText, state.setStartupText], shallow);
 
-export const setComposerStartupText = (text: string | null) =>
-  useComposerStore.getState().setStartupText(text);
+export const setComposerStartupText = (text: string | null) => useComposerStore.getState().setStartupText(text);

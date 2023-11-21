@@ -9,7 +9,6 @@ import { prettyBaseModel } from '~/common/util/modelUtils';
 
 import { ImportedOutcome } from './import/ImportOutcomeModal';
 
-
 /**
  * Restores all conversations in a JSON
  *  - supports both ExportedConversationJsonV1, and ExportedAllJsonV1 files
@@ -22,8 +21,7 @@ export function loadAllConversationsFromJson(fileName: string, obj: any, outcome
   // parse ExportedAllJsonV1
   if (hasConversations && !hasMessages) {
     const payload = obj as ExportedAllJsonV1;
-    for (const conversation of payload.conversations)
-      pushOutcomeFromJsonV1(fileName, conversation, outcome);
+    for (const conversation of payload.conversations) pushOutcomeFromJsonV1(fileName, conversation, outcome);
   }
   // parse ExportedConversationJsonV1
   else if (hasMessages && !hasConversations) {
@@ -37,17 +35,13 @@ export function loadAllConversationsFromJson(fileName: string, obj: any, outcome
 
 function pushOutcomeFromJsonV1(fileName: string, part: ExportedConversationJsonV1, outcome: ImportedOutcome) {
   const restored = createConversationFromJsonV1(part);
-  if (!restored)
-    outcome.conversations.push({ success: false, fileName, error: `Invalid conversation: ${part.id}` });
-  else
-    outcome.conversations.push({ success: true, fileName, conversation: restored });
+  if (!restored) outcome.conversations.push({ success: false, fileName, error: `Invalid conversation: ${part.id}` });
+  else outcome.conversations.push({ success: true, fileName, conversation: restored });
 }
-
 
 // NOTE: the tokenCount was removed while still in the JsonV1 format, so here we add it back, for backwards compat
 export function createConversationFromJsonV1(part: ExportedConversationJsonV1 & { tokenCount?: number }) {
-  if (!part || !part.id || !part.messages)
-    return null;
+  if (!part || !part.id || !part.messages) return null;
   const restored: DConversation = {
     id: part.id,
     messages: part.messages,
@@ -63,7 +57,6 @@ export function createConversationFromJsonV1(part: ExportedConversationJsonV1 & 
   };
   return restored;
 }
-
 
 /**
  * Download all conversations as a JSON file, for backup and future restore
@@ -82,7 +75,6 @@ export async function downloadAllConversationsJson() {
   const isoDate = new Date().toISOString().replace(/:/g, '-');
   await fileSave(blob, { fileName: `conversations-${isoDate}.json`, extensions: ['.json'] });
 }
-
 
 /**
  * Download a conversation as a JSON file, for backup and future restore
@@ -104,39 +96,37 @@ export function conversationToJsonV1(_conversation: DConversation): ExportedConv
   return conversation;
 }
 
-
 /**
  * Primitive rendering of a Conversation to Markdown
  */
 export function conversationToMarkdown(conversation: DConversation, hideSystemMessage: boolean): string {
-
   // const title =
   //   `# ${conversation.manual/auto/name || 'Conversation'}\n` +
   //   (new Date(conversation.created)).toLocaleString() + '\n\n';
 
-  return conversation.messages.filter(message => !hideSystemMessage || message.role !== 'system').map(message => {
-    let sender: string = message.sender;
-    let text = message.text;
-    switch (message.role) {
-      case 'system':
-        sender = '✨ System message';
-        text = '<img src="https://i.giphy.com/media/jJxaUysjzO9ri/giphy.webp" width="48" height="48" alt="typing fast meme"/>\n\n' + '*' + text + '*';
-        break;
-      case 'assistant':
-        const purpose = message.purposeId || conversation.systemPurposeId || null;
-        sender = `${purpose || 'Assistant'} · *${prettyBaseModel(message.originLLM || '')}*`.trim();
-        if (purpose && purpose in SystemPurposes)
-          sender = `${SystemPurposes[purpose]?.symbol || ''} ${sender}`.trim();
-        break;
-      case 'user':
-        sender = '👤 You';
-        break;
-    }
-    return `### ${sender}\n\n${text}\n\n`;
-  }).join('---\n\n');
-
+  return conversation.messages
+    .filter((message) => !hideSystemMessage || message.role !== 'system')
+    .map((message) => {
+      let sender: string = message.sender;
+      let text = message.text;
+      switch (message.role) {
+        case 'system':
+          sender = '✨ System message';
+          text = '<img src="https://i.giphy.com/media/jJxaUysjzO9ri/giphy.webp" width="48" height="48" alt="typing fast meme"/>\n\n' + '*' + text + '*';
+          break;
+        case 'assistant':
+          const purpose = message.purposeId || conversation.systemPurposeId || null;
+          sender = `${purpose || 'Assistant'} · *${prettyBaseModel(message.originLLM || '')}*`.trim();
+          if (purpose && purpose in SystemPurposes) sender = `${SystemPurposes[purpose]?.symbol || ''} ${sender}`.trim();
+          break;
+        case 'user':
+          sender = '👤 You';
+          break;
+      }
+      return `### ${sender}\n\n${text}\n\n`;
+    })
+    .join('---\n\n');
 }
-
 
 /// do not change these - consider people's backups
 
@@ -148,9 +138,9 @@ type ExportedConversationJsonV1 = {
   autoTitle?: string;
   created: number;
   updated: number | null;
-}
+};
 
 type ExportedAllJsonV1 = {
   conversations: ExportedConversationJsonV1[];
   models: { sources: DModelSource[] };
-}
+};

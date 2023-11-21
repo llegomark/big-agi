@@ -10,12 +10,10 @@ import { DMessage, useChatStore } from '~/common/state/store-chats';
 import { ChatAutoSpeakType, getChatAutoAI } from '../store-app-chat';
 import { createAssistantTypingMessage, updatePurposeInHistory } from './editors';
 
-
 /**
  * The main "chat" function. TODO: this is here so we can soon move it to the data model.
  */
 export async function runAssistantUpdatingState(conversationId: string, history: DMessage[], assistantLlmId: DLLMId, systemPurpose: SystemPurposeId) {
-
   // ai follow-up operations (fire/forget)
   const { autoSpeak, autoSuggestDiagrams, autoSuggestQuestions, autoTitleChat } = getChatAutoAI();
 
@@ -32,7 +30,8 @@ export async function runAssistantUpdatingState(conversationId: string, history:
 
   // stream the assistant's messages
   await streamAssistantMessage(
-    assistantLlmId, history,
+    assistantLlmId,
+    history,
     autoSpeak,
     (updatedMessage) => editMessage(conversationId, assistantMessageId, updatedMessage, false),
     controller.signal,
@@ -41,21 +40,18 @@ export async function runAssistantUpdatingState(conversationId: string, history:
   // clear to send, again
   startTyping(conversationId, null);
 
-  if (autoTitleChat)
-    autoTitle(conversationId);
+  if (autoTitleChat) autoTitle(conversationId);
 
-  if (autoSuggestDiagrams || autoSuggestQuestions)
-    autoSuggestions(conversationId, assistantMessageId, autoSuggestDiagrams, autoSuggestQuestions);
+  if (autoSuggestDiagrams || autoSuggestQuestions) autoSuggestions(conversationId, assistantMessageId, autoSuggestDiagrams, autoSuggestQuestions);
 }
 
-
 async function streamAssistantMessage(
-  llmId: DLLMId, history: DMessage[],
+  llmId: DLLMId,
+  history: DMessage[],
   autoSpeak: ChatAutoSpeakType,
   editMessage: (updatedMessage: Partial<DMessage>) => void,
   abortSignal: AbortSignal,
 ) {
-
   // speak once
   let spokenText = '';
   let spokenLine = false;
@@ -63,29 +59,26 @@ async function streamAssistantMessage(
   const messages = history.map(({ role, text }) => ({ role, content: text }));
 
   try {
-    await streamChat(llmId, messages, abortSignal,
-      (updatedMessage: Partial<DMessage>) => {
-        // update the message in the store (and thus schedule a re-render)
-        editMessage(updatedMessage);
+    await streamChat(llmId, messages, abortSignal, (updatedMessage: Partial<DMessage>) => {
+      // update the message in the store (and thus schedule a re-render)
+      editMessage(updatedMessage);
 
-        // 📢 TTS: first-line
-        if (updatedMessage?.text) {
-          spokenText = updatedMessage.text;
-          if (autoSpeak === 'firstLine' && !spokenLine) {
-            let cutPoint = spokenText.lastIndexOf('\n');
-            if (cutPoint < 0)
-              cutPoint = spokenText.lastIndexOf('. ');
-            if (cutPoint > 100 && cutPoint < 400) {
-              spokenLine = true;
-              const firstParagraph = spokenText.substring(0, cutPoint);
+      // 📢 TTS: first-line
+      if (updatedMessage?.text) {
+        spokenText = updatedMessage.text;
+        if (autoSpeak === 'firstLine' && !spokenLine) {
+          let cutPoint = spokenText.lastIndexOf('\n');
+          if (cutPoint < 0) cutPoint = spokenText.lastIndexOf('. ');
+          if (cutPoint > 100 && cutPoint < 400) {
+            spokenLine = true;
+            const firstParagraph = spokenText.substring(0, cutPoint);
 
-              // fire/forget: we don't want to stall this loop
-              void speakText(firstParagraph);
-            }
+            // fire/forget: we don't want to stall this loop
+            void speakText(firstParagraph);
           }
         }
-      },
-    );
+      }
+    });
   } catch (error: any) {
     if (error?.name !== 'AbortError') {
       console.error('Fetch request error:', error);
@@ -94,8 +87,7 @@ async function streamAssistantMessage(
   }
 
   // 📢 TTS: all
-  if ((autoSpeak === 'all' || autoSpeak === 'firstLine') && spokenText && !spokenLine && !abortSignal.aborted)
-    void speakText(spokenText);
+  if ((autoSpeak === 'all' || autoSpeak === 'firstLine') && spokenText && !spokenLine && !abortSignal.aborted) void speakText(spokenText);
 
   // finally, stop the typing animation
   editMessage({ typing: false });

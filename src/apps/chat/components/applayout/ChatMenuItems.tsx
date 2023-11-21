@@ -8,23 +8,25 @@ import CompressIcon from '@mui/icons-material/Compress';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ForkRightIcon from '@mui/icons-material/ForkRight';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
-
+import PrivacyTipOutlinedIcon from '@mui/icons-material/PrivacyTipOutlined';
+import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import { KeyStroke } from '~/common/components/KeyStroke';
 import { closeLayoutMenu } from '~/common/layout/store-applayout';
 import { useUICounter } from '~/common/state/store-ui';
 
 import { useChatShowSystemMessages } from '../../store-app-chat';
 
-
 export function ChatMenuItems(props: {
-  conversationId: string | null, isConversationEmpty: boolean, hasConversations: boolean,
-  isMessageSelectionMode: boolean, setIsMessageSelectionMode: (isMessageSelectionMode: boolean) => void,
-  onClearConversation: (conversationId: string) => void,
-  onDuplicateConversation: (conversationId: string) => void,
-  onExportConversation: (conversationId: string | null) => void,
-  onFlattenConversation: (conversationId: string) => void,
+  conversationId: string | null;
+  isConversationEmpty: boolean;
+  hasConversations: boolean;
+  isMessageSelectionMode: boolean;
+  setIsMessageSelectionMode: (isMessageSelectionMode: boolean) => void;
+  onClearConversation: (conversationId: string) => void;
+  onDuplicateConversation: (conversationId: string) => void;
+  onExportConversation: (conversationId: string | null) => void;
+  onFlattenConversation: (conversationId: string) => void;
 }) {
-
   // external state
   const { touch: shareTouch } = useUICounter('export-share');
   const [showSystemMessages, setShowSystemMessages] = useChatShowSystemMessages();
@@ -64,63 +66,83 @@ export function ChatMenuItems(props: {
     props.conversationId && props.onClearConversation(props.conversationId);
   };
 
-  return <>
+  return (
+    <>
+      {/*<ListItem>*/}
+      {/*  <Typography level='body-sm'>*/}
+      {/*    Conversation*/}
+      {/*  </Typography>*/}
+      {/*</ListItem>*/}
 
-    {/*<ListItem>*/}
-    {/*  <Typography level='body-sm'>*/}
-    {/*    Conversation*/}
-    {/*  </Typography>*/}
-    {/*</ListItem>*/}
+      <MenuItem onClick={handleSystemMessagesToggle}>
+        <ListItemDecorator>
+          <SettingsSuggestIcon />
+        </ListItemDecorator>
+        System message
+        <Switch checked={showSystemMessages} onChange={handleSystemMessagesToggle} sx={{ ml: 'auto' }} />
+      </MenuItem>
 
-    <MenuItem onClick={handleSystemMessagesToggle}>
-      <ListItemDecorator><SettingsSuggestIcon /></ListItemDecorator>
-      System message
-      <Switch checked={showSystemMessages} onChange={handleSystemMessagesToggle} sx={{ ml: 'auto' }} />
-    </MenuItem>
+      <ListDivider inset="startContent" />
 
-    <ListDivider inset='startContent' />
+      <MenuItem disabled={disabled} onClick={handleConversationDuplicate}>
+        <ListItemDecorator>
+          {/*<Badge size='sm' color='success'>*/}
+          <ForkRightIcon color="success" />
+          {/*</Badge>*/}
+        </ListItemDecorator>
+        Duplicate
+      </MenuItem>
 
-    <MenuItem disabled={disabled} onClick={handleConversationDuplicate}>
-      <ListItemDecorator>
-        {/*<Badge size='sm' color='success'>*/}
-        <ForkRightIcon color='success' />
-        {/*</Badge>*/}
-      </ListItemDecorator>
-      Duplicate
-    </MenuItem>
+      <MenuItem disabled={disabled} onClick={handleConversationFlatten}>
+        <ListItemDecorator>
+          {/*<Badge size='sm' color='success'>*/}
+          <CompressIcon color="success" />
+          {/*</Badge>*/}
+        </ListItemDecorator>
+        Flatten
+      </MenuItem>
 
-    <MenuItem disabled={disabled} onClick={handleConversationFlatten}>
-      <ListItemDecorator>
-        {/*<Badge size='sm' color='success'>*/}
-        <CompressIcon color='success' />
-        {/*</Badge>*/}
-      </ListItemDecorator>
-      Flatten
-    </MenuItem>
+      <ListDivider inset="startContent" />
 
-    <ListDivider inset='startContent' />
+      <MenuItem disabled={disabled} onClick={handleToggleMessageSelectionMode}>
+        <ListItemDecorator>{props.isMessageSelectionMode ? <CheckBoxOutlinedIcon /> : <CheckBoxOutlineBlankOutlinedIcon />}</ListItemDecorator>
+        <span style={props.isMessageSelectionMode ? { fontWeight: 800 } : {}}>Cleanup ...</span>
+      </MenuItem>
 
-    <MenuItem disabled={disabled} onClick={handleToggleMessageSelectionMode}>
-      <ListItemDecorator>{props.isMessageSelectionMode ? <CheckBoxOutlinedIcon /> : <CheckBoxOutlineBlankOutlinedIcon />}</ListItemDecorator>
-      <span style={props.isMessageSelectionMode ? { fontWeight: 800 } : {}}>
-        Cleanup ...
-      </span>
-    </MenuItem>
+      <MenuItem disabled={!props.hasConversations} onClick={handleConversationExport}>
+        <ListItemDecorator>
+          <FileDownloadIcon />
+        </ListItemDecorator>
+        Share / Export ...
+      </MenuItem>
 
-    <MenuItem disabled={!props.hasConversations} onClick={handleConversationExport}>
-      <ListItemDecorator>
-        <FileDownloadIcon />
-      </ListItemDecorator>
-      Share / Export ...
-    </MenuItem>
+      <MenuItem disabled={disabled} onClick={handleConversationClear}>
+        <ListItemDecorator>
+          <ClearIcon />
+        </ListItemDecorator>
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+          Reset
+          {!disabled && <KeyStroke combo="Ctrl + Alt + X" />}
+        </Box>
+      </MenuItem>
 
-    <MenuItem disabled={disabled} onClick={handleConversationClear}>
-      <ListItemDecorator><ClearIcon /></ListItemDecorator>
-      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-        Reset
-        {!disabled && <KeyStroke combo='Ctrl + Alt + X' />}
-      </Box>
-    </MenuItem>
+      <MenuItem>
+        <ListItemDecorator>
+          <ChatBubbleOutlineOutlinedIcon />
+        </ListItemDecorator>
+        <a href="https://betterllego.pages.dev/" target="_blank" rel="noopener">
+          ChatUI (Legacy)
+        </a>
+      </MenuItem>
 
-  </>;
+      <MenuItem>
+        <ListItemDecorator>
+          <PrivacyTipOutlinedIcon />
+        </ListItemDecorator>
+        <a href="https://llego.dev/legal/#:~:text=Privacy%20Policy%20for%20Llego.dev%20Chat%20App%20Users" target="_blank" rel="noopener">
+          Privacy Policy
+        </a>
+      </MenuItem>
+    </>
+  );
 }

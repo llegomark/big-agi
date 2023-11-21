@@ -5,19 +5,18 @@ import SyncIcon from '@mui/icons-material/Sync';
 
 import type { ToggleableBoolean } from '~/common/util/useToggleableBoolean';
 
-
 /**
  * Bottom row: model reload and optional 'advanced' toggle
  */
 export function SetupFormRefetchButton(props: {
-  refetch: () => void,
-  disabled: boolean, error: boolean,
-  leftButton?: React.ReactNode,
-  advanced?: ToggleableBoolean
+  refetch: () => void;
+  disabled: boolean;
+  error: boolean;
+  leftButton?: React.ReactNode;
+  advanced?: ToggleableBoolean;
 }) {
   return (
     <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between' }}>
-
       {props.leftButton}
 
       {!!props.advanced && (
@@ -35,7 +34,6 @@ export function SetupFormRefetchButton(props: {
       >
         Models
       </Button>
-
     </Box>
   );
 }

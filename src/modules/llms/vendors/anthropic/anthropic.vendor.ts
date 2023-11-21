@@ -12,7 +12,6 @@ import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { AnthropicSourceSetup } from './AnthropicSourceSetup';
 
-
 // special symbols
 export const isValidAnthropicApiKey = (apiKey?: string) => !!apiKey && (apiKey.startsWith('sk-') ? apiKey.length > 40 : apiKey.length >= 40);
 
@@ -50,26 +49,27 @@ export const ModelVendorAnthropic: IModelVendor<SourceSetupAnthropic, LLMOptions
   },
 };
 
-
 /**
  * This function either returns the LLM message, or function calls, or throws a descriptive error string
  */
 async function anthropicCallChatGenerate<TOut = VChatMessageOut>(
-  access: AnthropicAccessSchema, llmOptions: Partial<LLMOptionsOpenAI>, messages: VChatMessageIn[],
+  access: AnthropicAccessSchema,
+  llmOptions: Partial<LLMOptionsOpenAI>,
+  messages: VChatMessageIn[],
   // functions: VChatFunctionIn[] | null, forceFunctionName: string | null,
   maxTokens?: number,
 ): Promise<TOut> {
-  const { llmRef, llmTemperature = 0.5, llmResponseTokens } = llmOptions;
+  const { llmRef, llmTemperature = 0.7, llmResponseTokens } = llmOptions;
   try {
-    return await apiAsync.llmAnthropic.chatGenerate.mutate({
+    return (await apiAsync.llmAnthropic.chatGenerate.mutate({
       access,
       model: {
         id: llmRef!,
         temperature: llmTemperature,
-        maxTokens: maxTokens || llmResponseTokens || 1024,
+        maxTokens: maxTokens || llmResponseTokens || 4096,
       },
       history: messages,
-    }) as TOut;
+    })) as TOut;
   } catch (error: any) {
     const errorMessage = error?.message || error?.toString() || 'Anthropic Chat Generate Error';
     console.error(`anthropicCallChatGenerate: ${errorMessage}`);

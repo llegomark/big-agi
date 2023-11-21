@@ -1,7 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
-
 const chatGptMessageSchema = z.object({
   id: z.string(),
   author: z.object({
@@ -64,7 +63,6 @@ const chatGptSharedChatPage = z.object({
     }),
   }),
 });
-
 
 export function chatGptParseConversation(htmlPage: string) {
   // extract embedded JSON string

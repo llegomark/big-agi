@@ -10,13 +10,11 @@ import { copyToClipboard } from '~/common/util/clipboardUtils';
 import { HtmlBlock } from './blocks';
 import { overlayButtonsSx } from './RenderCode';
 
-
 // this is used by the blocks parser (for full text detection) and by the Code component (for inline rendering)
 export function heuristicIsHtml(text: string): boolean {
   // noinspection HtmlRequiredTitleElement
   return text.startsWith('<!DOCTYPE html') || text.startsWith('<head>\n');
 }
-
 
 export const IFrameComponent = (props: { htmlString: string }) => {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -42,20 +40,17 @@ export const IFrameComponent = (props: { htmlString: string }) => {
         border: 'none',
         boxSizing: 'border-box',
       }}
-      title='HTML content'
+      title="HTML content"
     />
   );
 };
 
-
-export function RenderHtml(props: { htmlBlock: HtmlBlock, sx?: SxProps }) {
+export function RenderHtml(props: { htmlBlock: HtmlBlock; sx?: SxProps }) {
   const [showHTML, setShowHTML] = React.useState(false);
 
   // remove the font* properties from sx
   const sx: any = props.sx || {};
-  for (const key in sx)
-    if (key.startsWith('font'))
-      delete sx[key];
+  for (const key in sx) if (key.startsWith('font')) delete sx[key];
 
   const handleCopyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -67,49 +62,48 @@ export function RenderHtml(props: { htmlBlock: HtmlBlock, sx?: SxProps }) {
       <Box
         sx={{
           minWidth: { sm: '480px', md: '750px', lg: '950px', xl: '1200px' },
-          mx: 0, p: 1.5, // this block gets a thicker border
+          mx: 0,
+          p: 1.5, // this block gets a thicker border
           display: 'block',
           overflowX: 'auto',
           '&:hover > .overlay-buttons': { opacity: 1 },
           ...sx,
         }}
       >
-
         {/* Highlighted Code / SVG render */}
-        {showHTML
-          ? <IFrameComponent htmlString={props.htmlBlock.html} />
-          : <Box>
+        {showHTML ? (
+          <IFrameComponent htmlString={props.htmlBlock.html} />
+        ) : (
+          <Box>
             <Typography>
-              <b>CAUTION</b> - The content you are about to access is an HTML page. It is possible that an
-              unauthorized entity is monitoring this connection and has generated this content.
-              Please exercise caution and do not trust the contents blindly. Be aware that proceeding
-              may pose potential risks. Click the button to view the content, if you wish to proceed.
+              <b>CAUTION</b> - The content you are about to access is an HTML page. It is possible that an unauthorized entity is monitoring this connection and
+              has generated this content. Please exercise caution and do not trust the contents blindly. Be aware that proceeding may pose potential risks.
+              Click the button to view the content, if you wish to proceed.
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
-              <Button variant='plain' color='neutral' onClick={() => setShowHTML(false)}>
+              <Button variant="plain" color="neutral" onClick={() => setShowHTML(false)}>
                 Ignore
               </Button>
-              <Button variant='solid' color='danger' onClick={() => setShowHTML(true)}>
+              <Button variant="solid" color="danger" onClick={() => setShowHTML(true)}>
                 Show Web Page
               </Button>
             </Box>
           </Box>
-        }
+        )}
 
         {/* External HTML Buttons */}
-        <Box className='overlay-buttons' sx={{ ...overlayButtonsSx, p: 1.5 }}>
-          <Tooltip title={showHTML ? 'Hide' : 'Show Web Page'} variant='solid'>
-            <IconButton variant={showHTML ? 'solid' : 'outlined'} color='danger' onClick={() => setShowHTML(!showHTML)}>
+        <Box className="overlay-buttons" sx={{ ...overlayButtonsSx, p: 1.5 }}>
+          <Tooltip title={showHTML ? 'Hide' : 'Show Web Page'} variant="solid">
+            <IconButton variant={showHTML ? 'solid' : 'outlined'} color="danger" onClick={() => setShowHTML(!showHTML)}>
               <WebIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title='Copy Code' variant='solid'>
-            <IconButton variant='outlined' color='neutral' onClick={handleCopyToClipboard}>
+          <Tooltip title="Copy Code" variant="solid">
+            <IconButton variant="outlined" color="neutral" onClick={handleCopyToClipboard}>
               <ContentCopyIcon />
             </IconButton>
           </Tooltip>
         </Box>
-
       </Box>
     </Box>
   );

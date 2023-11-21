@@ -5,21 +5,26 @@ import { createTRPCRouter, publicProcedure } from '~/server/api/trpc.server';
 import { env } from '~/server/env.mjs';
 import { fetchJsonOrTRPCError } from '~/server/api/trpc.serverutils';
 
-import { fixupHost, openAIChatGenerateOutputSchema, OpenAIHistorySchema, openAIHistorySchema, OpenAIModelSchema, openAIModelSchema } from '../openai/openai.router';
+import {
+  fixupHost,
+  openAIChatGenerateOutputSchema,
+  OpenAIHistorySchema,
+  openAIHistorySchema,
+  OpenAIModelSchema,
+  openAIModelSchema,
+} from '../openai/openai.router';
 import { listModelsOutputSchema } from '../server.schemas';
 
 import { AnthropicWire } from './anthropic.wiretypes';
 import { hardcodedAnthropicModels } from './anthropic.models';
 
-
 // Default hosts
 const DEFAULT_ANTHROPIC_HOST = 'api.anthropic.com';
 const DEFAULT_HELICONE_ANTHROPIC_HOST = 'anthropic.hconeai.com';
 
-
 // Mappers
 
-export function anthropicAccess(access: AnthropicAccessSchema, apiPath: string): { headers: HeadersInit, url: string } {
+export function anthropicAccess(access: AnthropicAccessSchema, apiPath: string): { headers: HeadersInit; url: string } {
   // API version
   const apiVersion = '2023-06-01';
 
@@ -45,7 +50,7 @@ export function anthropicAccess(access: AnthropicAccessSchema, apiPath: string):
 
   return {
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
       'anthropic-version': apiVersion,
       'X-API-Key': anthropicKey,
@@ -57,9 +62,12 @@ export function anthropicAccess(access: AnthropicAccessSchema, apiPath: string):
 
 export function anthropicChatCompletionPayload(model: OpenAIModelSchema, history: OpenAIHistorySchema, stream: boolean): AnthropicWire.Complete.Request {
   // encode the prompt for Claude models
-  const prompt = history.map(({ role, content }) => {
-    return role === 'assistant' ? `\n\nAssistant: ${content}` : `\n\nHuman: ${content}`;
-  }).join('') + '\n\nAssistant:';
+  const prompt =
+    history
+      .map(({ role, content }) => {
+        return role === 'assistant' ? `\n\nAssistant: ${content}` : `\n\nHuman: ${content}`;
+      })
+      .join('') + '\n\nAssistant:';
   return {
     prompt,
     model: model.id,
@@ -69,11 +77,14 @@ export function anthropicChatCompletionPayload(model: OpenAIModelSchema, history
   };
 }
 
-async function anthropicPOST<TOut extends object, TPostBody extends object>(access: AnthropicAccessSchema, body: TPostBody, apiPath: string /*, signal?: AbortSignal*/): Promise<TOut> {
+async function anthropicPOST<TOut extends object, TPostBody extends object>(
+  access: AnthropicAccessSchema,
+  body: TPostBody,
+  apiPath: string /*, signal?: AbortSignal*/,
+): Promise<TOut> {
   const { headers, url } = anthropicAccess(access, apiPath);
   return await fetchJsonOrTRPCError<TOut, TPostBody>(url, 'POST', headers, body, 'Anthropic');
 }
-
 
 // Input Schemas
 
@@ -91,14 +102,13 @@ const listModelsInputSchema = z.object({
 
 const chatGenerateInputSchema = z.object({
   access: anthropicAccessSchema,
-  model: openAIModelSchema, history: openAIHistorySchema,
+  model: openAIModelSchema,
+  history: openAIHistorySchema,
 });
-
 
 // Router
 
 export const llmAnthropicRouter = createTRPCRouter({
-
   /* Anthropic: list models
    *
    * See https://github.com/anthropics/anthropic-sdk-typescript/commit/7c53ded6b7f5f3efec0df295181f18469c37e09d?diff=unified for
@@ -114,7 +124,6 @@ export const llmAnthropicRouter = createTRPCRouter({
     .input(chatGenerateInputSchema)
     .output(openAIChatGenerateOutputSchema)
     .mutation(async ({ input }) => {
-
       const { access, model, history } = input;
 
       // ensure history has at least one message, and not from the assistant
@@ -128,10 +137,8 @@ export const llmAnthropicRouter = createTRPCRouter({
       );
 
       // expect a single output
-      if (wireCompletions.completion === undefined)
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `[Anthropic Issue] No completions` });
-      if (wireCompletions.stop_reason === undefined)
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `[Anthropic Issue] No stop_reason` });
+      if (wireCompletions.completion === undefined) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `[Anthropic Issue] No completions` });
+      if (wireCompletions.stop_reason === undefined) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `[Anthropic Issue] No stop_reason` });
 
       // check for a function output
       return {
@@ -140,5 +147,4 @@ export const llmAnthropicRouter = createTRPCRouter({
         content: wireCompletions.completion || '',
       };
     }),
-
 });

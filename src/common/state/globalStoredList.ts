@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-
 type TaggedListItem<TId extends string, TTag extends string> = {
   id: TId;
   listTags: TTag[];
-}
+};
 
 /**
  * Create a persistent list of type TaggedListItem that will handle list functions, and item editing functions.
@@ -13,7 +12,6 @@ type TaggedListItem<TId extends string, TTag extends string> = {
  *  - your item will be serialized/de-serialized to/from localStorage, make sure it's JSON-serializable
  */
 export function createStoredTaggetList<TItem extends TaggedListItem<string, string>>(persistName: string) {
-
   // Infer TId and TTag from TItem's id and listTags array type
   type TId = TItem['id'];
   type TTag = TItem['listTags'][number];
@@ -36,31 +34,32 @@ export function createStoredTaggetList<TItem extends TaggedListItem<string, stri
     selectItemForTag: (tag: TTag, itemId: TId) => void;
   };
 
-  return create<State>()(persist((set, get) => ({
-
+  return create<State>()(
+    persist(
+      (set, get) => ({
         items: [] as TItem[],
         selections: {} as SelectionMap,
 
+        addItem: (item: TItem) =>
+          set((state: State) => ({
+            items: [...state.items, item],
+          })),
 
-        addItem: (item: TItem) => set((state: State) => ({
-          items: [...state.items, item],
-        })),
+        removeItem: (itemId: TId) =>
+          set((state: State) => ({
+            items: state.items.filter((item: TItem) => item.id !== itemId),
+            selections: Object.fromEntries(Object.entries(state.selections).filter(([, selectedId]) => selectedId !== itemId)) as SelectionMap,
+          })),
 
-        removeItem: (itemId: TId) => set((state: State) => ({
-          items: state.items.filter((item: TItem) => item.id !== itemId),
-          selections: Object.fromEntries(
-            Object.entries(state.selections).filter(([, selectedId]) => selectedId !== itemId),
-          ) as SelectionMap,
-        })),
+        modifyItem: (itemId: TId, changes: Partial<TItem>) =>
+          set((state: State) => ({
+            items: state.items.map((item: TItem) => (item.id === itemId ? { ...item, ...changes } : item)),
+          })),
 
-        modifyItem: (itemId: TId, changes: Partial<TItem>) => set((state: State) => ({
-          items: state.items.map((item: TItem) => item.id === itemId ? { ...item, ...changes } : item),
-        })),
-
-        modifyItemDeep: (itemId: TId, updater: (item: TItem) => TItem) => set((state: State) => ({
-          items: state.items.map((item: TItem) => item.id === itemId ? updater(item) : item),
-        })),
-
+        modifyItemDeep: (itemId: TId, updater: (item: TItem) => TItem) =>
+          set((state: State) => ({
+            items: state.items.map((item: TItem) => (item.id === itemId ? updater(item) : item)),
+          })),
 
         selectItemForTag: (tag: TTag, itemId: TId) => {
           const item = get().items.find((item) => item.id === itemId);
@@ -72,15 +71,14 @@ export function createStoredTaggetList<TItem extends TaggedListItem<string, stri
             console.warn(`Item with id ${itemId} does not support tag ${tag} and cannot be selected for it.`);
           }
         },
-
       }),
 
       {
         name: persistName,
-      }),
+      },
+    ),
   );
 }
-
 
 /* Example:
 

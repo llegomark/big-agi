@@ -9,10 +9,7 @@ const handlerEdgeRoutes = (req: Request) =>
     endpoint: '/api/trpc-edge',
     req,
     createContext: createTRPCFetchContext,
-    onError:
-      process.env.NODE_ENV === 'development'
-        ? ({ path, error }) => console.error(`❌ tRPC-edge failed on ${path ?? '<no-path>'}:`, error)
-        : undefined,
+    onError: process.env.NODE_ENV === 'development' ? ({ path, error }) => console.error(`❌ tRPC-edge failed on ${path ?? '<no-path>'}:`, error) : undefined,
   });
 
 export const runtime = 'edge';

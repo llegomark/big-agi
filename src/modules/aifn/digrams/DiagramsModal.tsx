@@ -19,30 +19,23 @@ import { useFormRadioLlmType } from '~/common/components/forms/useFormRadioLlmTy
 
 import { bigDiagramPrompt, DiagramLanguage, diagramLanguages, DiagramType, diagramTypes } from './diagrams.data';
 
-
 // Used by the callers to setup the diagam session
 export interface DiagramConfig {
   conversationId: string;
-  messageId: string,
+  messageId: string;
   text: string;
 }
-
 
 // This method fixes issues in the generation output. Very heuristic.
 function hotFixMessage(message: DMessage) {
   // put the code in markdown, if missing
-  if (message.text.startsWith('@start'))
-    message.text = '```\n' + message.text + '\n```';
+  if (message.text.startsWith('@start')) message.text = '```\n' + message.text + '\n```';
   // fix generation mistakes
-  message.text = message.text
-    .replaceAll('@endmindmap\n@enduml', '@endmindmap')
-    .replaceAll('```\n```', '```');
+  message.text = message.text.replaceAll('@endmindmap\n@enduml', '@endmindmap').replaceAll('```\n```', '```');
   return message;
 }
 
-
-export function DiagramsModal(props: { config: DiagramConfig, onClose: () => void; }) {
-
+export function DiagramsModal(props: { config: DiagramConfig; onClose: () => void }) {
   // state
   const [showOptions, setShowOptions] = React.useState(true);
   const [message, setMessage] = React.useState<DMessage | null>(null);
@@ -57,21 +50,17 @@ export function DiagramsModal(props: { config: DiagramConfig, onClose: () => voi
   // derived state
   const { conversationId, text: subject } = props.config;
 
-
   /**
    * Core Diagram Generation function, with Streaming, custom prompt, etc.
    */
   const handleGenerateNew = React.useCallback(async () => {
-    if (abortController)
-      return;
+    if (abortController) return;
 
-    const conversation = useChatStore.getState().conversations.find(c => c.id === conversationId);
-    if (!diagramType || !diagramLanguage || !diagramLlm || !conversation)
-      return setErrorMessage('Invalid diagram Type, Language, Generator, or conversation.');
+    const conversation = useChatStore.getState().conversations.find((c) => c.id === conversationId);
+    if (!diagramType || !diagramLanguage || !diagramLlm || !conversation) return setErrorMessage('Invalid diagram Type, Language, Generator, or conversation.');
 
     const systemMessage = conversation?.messages?.length ? conversation.messages[0] : null;
-    if (systemMessage?.role !== 'system')
-      return setErrorMessage('No System message in this conversation');
+    if (systemMessage?.role !== 'system') return setErrorMessage('No System message in this conversation');
 
     setErrorMessage(null);
 
@@ -84,12 +73,10 @@ export function DiagramsModal(props: { config: DiagramConfig, onClose: () => voi
     const diagramPrompt = bigDiagramPrompt(diagramType, diagramLanguage, systemMessage.text, subject);
 
     try {
-      await streamChat(diagramLlm.id, diagramPrompt, stepAbortController.signal,
-        (update: Partial<{ text: string, typing: boolean, originLLM: string }>) => {
-          assistantMessage = { ...assistantMessage, ...update };
-          setMessage(assistantMessage);
-        },
-      );
+      await streamChat(diagramLlm.id, diagramPrompt, stepAbortController.signal, (update: Partial<{ text: string; typing: boolean; originLLM: string }>) => {
+        assistantMessage = { ...assistantMessage, ...update };
+        setMessage(assistantMessage);
+      });
     } catch (error: any) {
       setMessage(null);
       setErrorMessage(error?.name !== 'AbortError' ? error?.message : 'Interrupted.');
@@ -102,9 +89,7 @@ export function DiagramsModal(props: { config: DiagramConfig, onClose: () => voi
       });
       setAbortController(null);
     }
-
   }, [abortController, conversationId, diagramLanguage, diagramLlm, diagramType, subject]);
-
 
   // [Effect] Auto-abort on unmount
   React.useEffect(() => {
@@ -116,78 +101,82 @@ export function DiagramsModal(props: { config: DiagramConfig, onClose: () => voi
     };
   }, [abortController]);
 
-
   const handleInsertAndClose = () => {
-    if (!message || !message.text)
-      return setErrorMessage('Nothing to add to the conversation.');
+    if (!message || !message.text) return setErrorMessage('Nothing to add to the conversation.');
     useChatStore.getState().appendMessage(conversationId, { ...message });
     props.onClose();
   };
 
-
-  return <GoodModal
-    title='Generate Diagram' noTitleBar
-    open onClose={props.onClose}
-    sx={{ maxWidth: { xs: '100vw', md: '95vw' } }}
-    startButton={
-      <Button variant='soft' color='success' disabled={!message || !!abortController} endDecorator={<TelegramIcon />} onClick={handleInsertAndClose}>
-        Add To Chat
-      </Button>
-    }
-  >
-
-    {showOptions && (
-      <Grid container spacing={2}>
-        <Grid xs={12} md={6}>
-          {diagramComponent}
-        </Grid>
-        {languageComponent && (
+  return (
+    <GoodModal
+      title="Generate Diagram"
+      noTitleBar
+      open
+      onClose={props.onClose}
+      sx={{ maxWidth: { xs: '100vw', md: '95vw' } }}
+      startButton={
+        <Button variant="soft" color="success" disabled={!message || !!abortController} endDecorator={<TelegramIcon />} onClick={handleInsertAndClose}>
+          Add To Chat
+        </Button>
+      }
+    >
+      {showOptions && (
+        <Grid container spacing={2}>
           <Grid xs={12} md={6}>
-            {languageComponent}
+            {diagramComponent}
           </Grid>
-        )}
-        <Grid xs={12} xl={6}>
-          {llmComponent}
+          {languageComponent && (
+            <Grid xs={12} md={6}>
+              {languageComponent}
+            </Grid>
+          )}
+          <Grid xs={12} xl={6}>
+            {llmComponent}
+          </Grid>
         </Grid>
-      </Grid>
-    )}
+      )}
 
-    <ButtonGroup color='primary' sx={{ flexGrow: 1 }}>
-      <Button
-        fullWidth
-        variant={abortController ? 'soft' : 'solid'} color='primary'
-        disabled={!diagramLlm}
-        onClick={abortController ? () => abortController.abort() : handleGenerateNew}
-        endDecorator={abortController ? <StopOutlinedIcon /> : message ? <ReplayIcon /> : <AccountTreeIcon />}
-        sx={{ minWidth: 200 }}
-      >
-        {abortController ? 'Stop' : message ? 'Regenerate' : 'Generate'}
-      </Button>
-      <IconButton onClick={() => setShowOptions(options => !options)}>
-        {showOptions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-      </IconButton>
-    </ButtonGroup>
+      <ButtonGroup color="primary" sx={{ flexGrow: 1 }}>
+        <Button
+          fullWidth
+          variant={abortController ? 'soft' : 'solid'}
+          color="primary"
+          disabled={!diagramLlm}
+          onClick={abortController ? () => abortController.abort() : handleGenerateNew}
+          endDecorator={abortController ? <StopOutlinedIcon /> : message ? <ReplayIcon /> : <AccountTreeIcon />}
+          sx={{ minWidth: 200 }}
+        >
+          {abortController ? 'Stop' : message ? 'Regenerate' : 'Generate'}
+        </Button>
+        <IconButton onClick={() => setShowOptions((options) => !options)}>{showOptions ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
+      </ButtonGroup>
 
-    {errorMessage && <InlineError error={errorMessage} />}
+      {errorMessage && <InlineError error={errorMessage} />}
 
-    {!showOptions && !!abortController && <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-      <CircularProgress size='lg' />
-    </Box>}
+      {!showOptions && !!abortController && (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress size="lg" />
+        </Box>
+      )}
 
-    {!!message && (!abortController || showOptions) && (
-      <ChatMessage
-        message={message} hideAvatars noBottomBorder noMarkdown diagramMode
-        codeBackground='background.surface'
-        onMessageEdit={(text) => setMessage({ ...message, text })}
-        sx={{
-          backgroundColor: abortController ? 'background.level3' : 'background.level2',
-          marginX: 'calc(-1 * var(--Card-padding))',
-          minHeight: 96,
-        }}
-      />
-    )}
+      {!!message && (!abortController || showOptions) && (
+        <ChatMessage
+          message={message}
+          hideAvatars
+          noBottomBorder
+          noMarkdown
+          diagramMode
+          codeBackground="background.surface"
+          onMessageEdit={(text) => setMessage({ ...message, text })}
+          sx={{
+            backgroundColor: abortController ? 'background.level3' : 'background.level2',
+            marginX: 'calc(-1 * var(--Card-padding))',
+            minHeight: 96,
+          }}
+        />
+      )}
 
-    {!message && <Divider />}
-
-  </GoodModal>;
+      {!message && <Divider />}
+    </GoodModal>
+  );
 }

@@ -2,7 +2,6 @@ import type { VChatMessageIn } from '~/modules/llms/transports/chatGenerate';
 
 import type { FormRadioOption } from '~/common/components/forms/useFormRadio';
 
-
 export type DiagramType = 'auto' | 'mind';
 export type DiagramLanguage = 'mermaid' | 'plantuml';
 
@@ -35,17 +34,20 @@ mindmap
       Mermaid
 `.trim();
 
-function mermaidDiagramPrompt(diagramType: DiagramType): { sys: string, usr: string } {
-  let promptDetails = diagramType === 'auto'
-    ? 'You create a valid Mermaid diagram markdown (```mermaid\\n...), ready to be rendered into a diagram. Ensure the code contains no external references, and all names are properly enclosed in double quotes and escaped if necessary. Choose the most suitable diagram type from the following supported types: flowchart, sequence, class, state, erd, gantt, pie, git.'
-    : 'You create a valid Mermaid mindmap markdown (```mermaid\\n...), ready to be rendered into a mind map. Ensure the code contains no external references, and all names are properly enclosed in double quotes and escaped if necessary. For example:\n' + mermaidMindmapExample + '\n';
+function mermaidDiagramPrompt(diagramType: DiagramType): { sys: string; usr: string } {
+  let promptDetails =
+    diagramType === 'auto'
+      ? 'You create a valid Mermaid diagram markdown (```mermaid\\n...), ready to be rendered into a diagram. Ensure the code contains no external references, and all names are properly enclosed in double quotes and escaped if necessary. Choose the most suitable diagram type from the following supported types: flowchart, sequence, class, state, erd, gantt, pie, git.'
+      : 'You create a valid Mermaid mindmap markdown (```mermaid\\n...), ready to be rendered into a mind map. Ensure the code contains no external references, and all names are properly enclosed in double quotes and escaped if necessary. For example:\n' +
+        mermaidMindmapExample +
+        '\n';
   return {
     sys: `You are an AI that generates correct Mermaid code based on provided text. ${promptDetails}`,
     usr: `Generate the Mermaid code for a ${diagramType === 'auto' ? 'suitable diagram' : 'mind map'} that represents the preceding assistant message.`,
   };
 }
 
-function plantumlDiagramPrompt(diagramType: DiagramType): { sys: string, usr: string } {
+function plantumlDiagramPrompt(diagramType: DiagramType): { sys: string; usr: string } {
   switch (diagramType) {
     case 'auto':
       return {

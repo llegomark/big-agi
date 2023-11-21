@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 
 // UI Counters
@@ -10,7 +10,7 @@ interface UICountersStore {
   clearAllActionCounters: () => void;
 }
 
-const useUICountersStore = create<UICountersStore>()(
+const useUICountersStore = createWithEqualityFn<UICountersStore>()(
   persist(
     (set) => ({
       actionCounters: {},
@@ -63,14 +63,12 @@ interface UIPreferencesStore {
 
   zenMode: 'clean' | 'cleaner';
   setZenMode: (zenMode: 'clean' | 'cleaner') => void;
-
 }
 
-export const useUIPreferencesStore = create<UIPreferencesStore>()(
+export const useUIPreferencesStore = createWithEqualityFn<UIPreferencesStore>()(
   persist(
     (set) => ({
-
-      preferredLanguage: (typeof navigator !== 'undefined') && navigator.language || 'en-US',
+      preferredLanguage: (typeof navigator !== 'undefined' && navigator.language) || 'en-US',
       setPreferredLanguage: (preferredLanguage: string) => set({ preferredLanguage }),
 
       centerMode: 'wide',
@@ -94,7 +92,6 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       zenMode: 'clean',
       setZenMode: (zenMode: 'clean' | 'cleaner') => set({ zenMode }),
-
     }),
     {
       name: 'app-ui',
@@ -106,8 +103,7 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       migrate: (state: any, fromVersion: number): UIPreferencesStore => {
         // 0 -> 1: rename 'enterToSend' to 'enterIsNewline' (flip the meaning)
-        if (state && fromVersion === 0)
-          state.enterIsNewline = state['enterToSend'] === false;
+        if (state && fromVersion === 0) state.enterIsNewline = state['enterToSend'] === false;
         return state;
       },
     },

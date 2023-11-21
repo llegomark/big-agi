@@ -24,7 +24,6 @@ export function getOriginUrl(): string {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
-
 /**
  * If the string is a valid URL, return it. Otherwise, return null.
  */

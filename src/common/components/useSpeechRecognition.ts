@@ -6,20 +6,19 @@ import { CapabilityBrowserSpeechRecognition } from './useCapabilities';
 import { useGlobalShortcut } from './useGlobalShortcut';
 import { useUIPreferencesStore } from '../state/store-ui';
 
-
 type DoneReason =
-  undefined               // upon start: not done yet
-  | 'manual'              // user clicked the stop button
+  | undefined // upon start: not done yet
+  | 'manual' // user clicked the stop button
   | 'continuous-deadline' // we hit our `softStopTimeout` while listening continuously
   | 'api-unknown-timeout' // a timeout has occurred
-  | 'api-error'           // underlying .onerror
-  | 'api-no-speech';      // underlying .onerror, user did not speak
+  | 'api-error' // underlying .onerror
+  | 'api-no-speech'; // underlying .onerror, user did not speak
 
 export interface SpeechResult {
-  transcript: string;         // the portion of the transcript that is finalized (or all the transcript if done)
-  interimTranscript: string;  // for the continuous (interim) listening, this is the current transcript
-  done: boolean;              // true if the recognition is done - no more updates after this
-  doneReason: DoneReason;     // the reason why the recognition is done
+  transcript: string; // the portion of the transcript that is finalized (or all the transcript if done)
+  interimTranscript: string; // for the continuous (interim) listening, this is the current transcript
+  done: boolean; // true if the recognition is done - no more updates after this
+  doneReason: DoneReason; // the reason why the recognition is done
 }
 
 let cachedCapability: CapabilityBrowserSpeechRecognition | null = null;
@@ -37,7 +36,6 @@ export const browserSpeechRecognitionCapability = (): CapabilityBrowserSpeechRec
   }
   return cachedCapability;
 };
-
 
 /**
  * We use a hook to default to 'false/null' and dynamically create the engine and update the UI.
@@ -59,7 +57,7 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
   const [isSpeechError, setIsSpeechError] = React.useState<boolean>(false);
 
   // external state (will update this function when changed)
-  const preferredLanguage = useUIPreferencesStore(state => state.preferredLanguage);
+  const preferredLanguage = useUIPreferencesStore((state) => state.preferredLanguage);
 
   // Update the ref each time the component calling the hook re-renders with a new callback
   React.useEffect(() => {
@@ -83,8 +81,7 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
     }
 
     const webSpeechAPI = getSpeechRecognition();
-    if (!webSpeechAPI)
-      return;
+    if (!webSpeechAPI) return;
 
     // local memory within a session
     const speechResult: SpeechResult = {
@@ -150,7 +147,7 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
       onResultCallbackRef.current(speechResult);
     };
 
-    instance.onerror = event => {
+    instance.onerror = (event) => {
       if (event.error === 'no-speech') {
         speechResult.doneReason = 'api-no-speech';
       } else {
@@ -168,41 +165,40 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
       speechResult.interimTranscript = '';
       for (const result of event.results) {
         let chunk = result[0]?.transcript?.trim();
-        if (!chunk)
-          continue;
+        if (!chunk) continue;
 
         // [EN] spoken punctuation marks -> actual characters
-        chunk = chunk
-          .replaceAll(' comma', ',')
-          .replaceAll(' exclamation mark', '!')
-          .replaceAll(' period', '.')
-          .replaceAll(' question mark', '?');
+        chunk = chunk.replaceAll(' comma', ',').replaceAll(' exclamation mark', '!').replaceAll(' period', '.').replaceAll(' question mark', '?');
 
         // capitalize
-        if (chunk.length >= 2 && (result.isFinal || !speechResult.interimTranscript))
-          chunk = chunk.charAt(0).toUpperCase() + chunk.slice(1);
+        if (chunk.length >= 2 && (result.isFinal || !speechResult.interimTranscript)) chunk = chunk.charAt(0).toUpperCase() + chunk.slice(1);
 
         // add ending
-        if (result.isFinal && !chunk.endsWith('.') && !chunk.endsWith('!') && !chunk.endsWith('?') && !chunk.endsWith(':') && !chunk.endsWith(';') && !chunk.endsWith(','))
+        if (
+          result.isFinal &&
+          !chunk.endsWith('.') &&
+          !chunk.endsWith('!') &&
+          !chunk.endsWith('?') &&
+          !chunk.endsWith(':') &&
+          !chunk.endsWith(';') &&
+          !chunk.endsWith(',')
+        )
           chunk += '.';
 
-        if (result.isFinal)
-          speechResult.transcript += chunk + ' ';
-        else
-          speechResult.interimTranscript += chunk + ' ';
+        if (result.isFinal) speechResult.transcript += chunk + ' ';
+        else speechResult.interimTranscript += chunk + ' ';
       }
 
       // update the UI
       onResultCallbackRef.current(speechResult);
 
       // auto-stop
-      if (instance.interimResults)
-        reloadInactivityTimeout(softStopTimeout, 'continuous-deadline');
+      if (instance.interimResults) reloadInactivityTimeout(softStopTimeout, 'continuous-deadline');
     };
 
     // store the control interface
     refRecognition.current = {
-      setLang: (lang: string) => instance.lang = lang,
+      setLang: (lang: string) => (instance.lang = lang),
       start: () => instance.start(),
       stop: (reason: DoneReason) => {
         speechResult.doneReason = reason;
@@ -211,17 +207,13 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
     };
     refStarted.current = false;
     setIsSpeechEnabled(true);
-
   }, [preferredLanguage, softStopTimeout]);
-
 
   // ACTIONS: start/stop recording
 
   const startRecording = React.useCallback(() => {
-    if (!refRecognition.current)
-      return console.error('startRecording: Speech recognition is not supported or not initialized.');
-    if (refStarted.current)
-      return console.error('startRecording: Start recording called while already recording.');
+    if (!refRecognition.current) return console.error('startRecording: Speech recognition is not supported or not initialized.');
+    if (refStarted.current) return console.error('startRecording: Start recording called while already recording.');
 
     setIsSpeechError(false);
     try {
@@ -233,19 +225,15 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
   }, []);
 
   const stopRecording = React.useCallback(() => {
-    if (!refRecognition.current)
-      return console.error('stopRecording: Speech recognition is not supported or not initialized.');
-    if (!refStarted.current)
-      return console.error('stopRecording: Stop recording called while not recording.');
+    if (!refRecognition.current) return console.error('stopRecording: Speech recognition is not supported or not initialized.');
+    if (!refStarted.current) return console.error('stopRecording: Stop recording called while not recording.');
 
     refRecognition.current.stop('manual');
   }, []);
 
   const toggleRecording = React.useCallback(() => {
-    if (refStarted.current)
-      stopRecording();
-    else
-      startRecording();
+    if (refStarted.current) stopRecording();
+    else startRecording();
   }, [startRecording, stopRecording]);
 
   useGlobalShortcut(useShortcutCtrlKey, true, false, false, toggleRecording);
@@ -262,22 +250,22 @@ export const useSpeechRecognition = (onResultCallback: (result: SpeechResult) =>
   };
 };
 
-
 function getSpeechRecognition(): ISpeechRecognition | null {
   if (isBrowser) {
     // noinspection JSUnresolvedReference
     return (
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition ||
-      (window as any).mozSpeechRecognition ||
-      (window as any).msSpeechRecognition
-    ) ?? null;
+      ((window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition ||
+        (window as any).mozSpeechRecognition ||
+        (window as any).msSpeechRecognition) ??
+      null
+    );
   }
   return null;
 }
 
 interface ISpeechRecognition extends EventTarget {
-  new(): ISpeechRecognition;
+  new (): ISpeechRecognition;
 
   lang: string;
   continuous: boolean;

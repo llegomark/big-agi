@@ -1,10 +1,8 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 
-
 interface ElevenlabsStore {
-
   // ElevenLabs Text to Speech settings
 
   elevenLabsApiKey: string;
@@ -12,13 +10,11 @@ interface ElevenlabsStore {
 
   elevenLabsVoiceId: string;
   setElevenLabsVoiceId: (voiceId: string) => void;
-
 }
 
-const useElevenlabsStore = create<ElevenlabsStore>()(
+const useElevenlabsStore = createWithEqualityFn<ElevenlabsStore>()(
   persist(
     (set) => ({
-
       // ElevenLabs Text to Speech settings
 
       elevenLabsApiKey: '',
@@ -26,21 +22,19 @@ const useElevenlabsStore = create<ElevenlabsStore>()(
 
       elevenLabsVoiceId: '',
       setElevenLabsVoiceId: (elevenLabsVoiceId: string) => set({ elevenLabsVoiceId }),
-
     }),
     {
       name: 'app-module-elevenlabs',
-    }),
+    },
+  ),
 );
 
 export const useElevenLabsApiKey = (): [string, (apiKey: string) => void] =>
-  useElevenlabsStore(state => [state.elevenLabsApiKey, state.setElevenLabsApiKey], shallow);
+  useElevenlabsStore((state) => [state.elevenLabsApiKey, state.setElevenLabsApiKey], shallow);
 
 export const useElevenLabsVoiceId = (): [string, (voiceId: string) => void] =>
-  useElevenlabsStore(state => [state.elevenLabsVoiceId, state.setElevenLabsVoiceId], shallow);
+  useElevenlabsStore((state) => [state.elevenLabsVoiceId, state.setElevenLabsVoiceId], shallow);
 
-export const useElevenLabsData = (): [string, string] =>
-  useElevenlabsStore(state => [state.elevenLabsApiKey, state.elevenLabsVoiceId], shallow);
+export const useElevenLabsData = (): [string, string] => useElevenlabsStore((state) => [state.elevenLabsApiKey, state.elevenLabsVoiceId], shallow);
 
-export const getElevenLabsData = (): { elevenLabsApiKey: string, elevenLabsVoiceId: string } =>
-  useElevenlabsStore.getState();
+export const getElevenLabsData = (): { elevenLabsApiKey: string; elevenLabsVoiceId: string } => useElevenlabsStore.getState();

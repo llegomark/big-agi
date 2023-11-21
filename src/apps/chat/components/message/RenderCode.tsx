@@ -16,20 +16,26 @@ import { OpenInReplit } from './OpenInReplit';
 import { RenderCodeMermaid } from './RenderCodeMermaid';
 import { heuristicIsHtml, IFrameComponent } from './RenderHtml';
 
-
 export const overlayButtonsSx: SxProps = {
-  position: 'absolute', top: 0, right: 0, zIndex: 10,
-  display: 'flex', flexDirection: 'row', gap: 1,
-  opacity: 0, transition: 'opacity 0.2s',
+  position: 'absolute',
+  top: 0,
+  right: 0,
+  zIndex: 10,
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 1,
+  opacity: 0,
+  transition: 'opacity 0.2s',
   '& > button': { backdropFilter: 'blur(12px)' },
 };
 
 function RenderCodeImpl(props: {
-  codeBlock: CodeBlock, noCopyButton?: boolean, sx?: SxProps,
-  highlightCode: (inferredCodeLanguage: string | null, blockCode: string) => string,
-  inferCodeLanguage: (blockTitle: string, code: string) => string | null,
+  codeBlock: CodeBlock;
+  noCopyButton?: boolean;
+  sx?: SxProps;
+  highlightCode: (inferredCodeLanguage: string | null, blockCode: string) => string;
+  inferCodeLanguage: (blockTitle: string, code: string) => string | null;
 }) {
-
   // state
   const [showHTML, setShowHTML] = React.useState(false);
   const [showMermaid, setShowMermaid] = React.useState(true);
@@ -39,17 +45,16 @@ function RenderCodeImpl(props: {
   // derived props
   const {
     codeBlock: { blockTitle, blockCode, complete: blockComplete },
-    highlightCode, inferCodeLanguage,
+    highlightCode,
+    inferCodeLanguage,
   } = props;
 
   // heuristic for language, and syntax highlight
-  const { highlightedCode, inferredCodeLanguage } = React.useMemo(
-    () => {
-      const inferredCodeLanguage = inferCodeLanguage(blockTitle, blockCode);
-      const highlightedCode = highlightCode(inferredCodeLanguage, blockCode);
-      return { highlightedCode, inferredCodeLanguage };
-    }, [inferCodeLanguage, blockTitle, blockCode, highlightCode]);
-
+  const { highlightedCode, inferredCodeLanguage } = React.useMemo(() => {
+    const inferredCodeLanguage = inferCodeLanguage(blockTitle, blockCode);
+    const highlightedCode = highlightCode(inferredCodeLanguage, blockCode);
+    return { highlightedCode, inferredCodeLanguage };
+  }, [inferCodeLanguage, blockTitle, blockCode, highlightCode]);
 
   // heuristics for specialized rendering
 
@@ -60,11 +65,11 @@ function RenderCodeImpl(props: {
   const renderMermaid = isMermaid && showMermaid;
 
   const isPlantUML =
-    (blockCode.startsWith('@startuml') && blockCode.endsWith('@enduml'))
-    || (blockCode.startsWith('@startmindmap') && blockCode.endsWith('@endmindmap'))
-    || (blockCode.startsWith('@startsalt') && blockCode.endsWith('@endsalt'))
-    || (blockCode.startsWith('@startwbs') && blockCode.endsWith('@endwbs'))
-    || (blockCode.startsWith('@startgantt') && blockCode.endsWith('@endgantt'));
+    (blockCode.startsWith('@startuml') && blockCode.endsWith('@enduml')) ||
+    (blockCode.startsWith('@startmindmap') && blockCode.endsWith('@endmindmap')) ||
+    (blockCode.startsWith('@startsalt') && blockCode.endsWith('@endsalt')) ||
+    (blockCode.startsWith('@startwbs') && blockCode.endsWith('@endwbs')) ||
+    (blockCode.startsWith('@startgantt') && blockCode.endsWith('@endgantt'));
 
   let renderPlantUML = isPlantUML && showPlantUML;
   const { data: plantUmlHtmlData, error: plantUmlError } = useQuery({
@@ -87,15 +92,13 @@ function RenderCodeImpl(props: {
       // validate/extract the SVG
       const start = text.indexOf('<svg ');
       const end = text.indexOf('</svg>');
-      if (start < 0 || end <= start)
-        throw new Error('Could not render PlantUML');
+      if (start < 0 || end <= start) throw new Error('Could not render PlantUML');
       const svg = text
         .slice(start, end + 6) // <svg ... </svg>
         .replace('background:#FFFFFF;', ''); // transparent background
 
       // check for syntax errors
-      if (svg.includes('>Syntax Error?</text>'))
-        throw new Error('syntax issue (it happens!). Please regenerate or change generator model.');
+      if (svg.includes('>Syntax Error?</text>')) throw new Error('syntax issue (it happens!). Please regenerate or change generator model.');
 
       return svg;
     },
@@ -105,7 +108,6 @@ function RenderCodeImpl(props: {
 
   const isSVG = blockCode.startsWith('<svg') && blockCode.endsWith('</svg>');
   const renderSVG = isSVG && showSVG;
-
 
   const languagesCodepen = ['html', 'css', 'javascript', 'json', 'typescript'];
   const canCodepen = isSVG || (!!inferredCodeLanguage && languagesCodepen.includes(inferredCodeLanguage));
@@ -121,21 +123,23 @@ function RenderCodeImpl(props: {
   return (
     <Box sx={{ position: 'relative' /* for overlay buttons to stick properly */ }}>
       <Box
-        component='code'
+        component="code"
         className={`language-${inferredCodeLanguage || 'unknown'}`}
         sx={{
-          fontWeight: 500, whiteSpace: 'pre', // was 'break-spaces' before we implemented per-block scrolling
-          mx: 0, p: 1.5, // this block gets a thicker border
+          fontWeight: 500,
+          whiteSpace: 'pre', // was 'break-spaces' before we implemented per-block scrolling
+          mx: 0,
+          p: 1.5, // this block gets a thicker border
           display: 'block',
           overflowX: 'auto',
           '&:hover > .overlay-buttons': { opacity: 1 },
           ...(props.sx || {}),
-        }}>
-
+        }}
+      >
         {/* Markdown Title (File/Type) */}
         {blockTitle != inferredCodeLanguage && blockTitle.includes('.') && (
           <Sheet sx={{ boxShadow: 'sm', borderRadius: 'sm', mb: 1 }}>
-            <Typography level='title-sm' sx={{ px: 1, py: 0.5 }}>
+            <Typography level="title-sm" sx={{ px: 1, py: 0.5 }}>
               {blockTitle}
               {/*{inferredCodeLanguage}*/}
             </Typography>
@@ -143,64 +147,63 @@ function RenderCodeImpl(props: {
         )}
 
         {/* Renders HTML, or inline SVG, inline plantUML rendered, or highlighted code */}
-        {renderHTML
-          ? <IFrameComponent htmlString={blockCode} />
-          : renderMermaid
-            ? <RenderCodeMermaid mermaidCode={blockCode} />
-            : <Box component='div'
-                   dangerouslySetInnerHTML={{
-                     __html:
-                       renderSVG
-                         ? blockCode
-                         : renderPlantUML
-                           ? (plantUmlHtmlData || (plantUmlError as string) || 'No PlantUML rendering.')
-                           : highlightedCode,
-                   }}
-                   sx={{
-                     ...(renderSVG ? { lineHeight: 0 } : {}),
-                     ...(renderPlantUML ? { textAlign: 'center' } : {}),
-                   }}
-            />}
+        {renderHTML ? (
+          <IFrameComponent htmlString={blockCode} />
+        ) : renderMermaid ? (
+          <RenderCodeMermaid mermaidCode={blockCode} />
+        ) : (
+          <Box
+            component="div"
+            dangerouslySetInnerHTML={{
+              __html: renderSVG ? blockCode : renderPlantUML ? plantUmlHtmlData || (plantUmlError as string) || 'No PlantUML rendering.' : highlightedCode,
+            }}
+            sx={{
+              ...(renderSVG ? { lineHeight: 0 } : {}),
+              ...(renderPlantUML ? { textAlign: 'center' } : {}),
+            }}
+          />
+        )}
 
         {/* Code Buttons */}
-        <Box className='overlay-buttons' sx={{ ...overlayButtonsSx, p: 0.5 }}>
+        <Box className="overlay-buttons" sx={{ ...overlayButtonsSx, p: 0.5 }}>
           {isHTML && (
-            <Tooltip title={renderHTML ? 'Hide' : 'Show Web Page'} variant='solid'>
-              <IconButton variant={renderHTML ? 'solid' : 'outlined'} color='danger' onClick={() => setShowHTML(!showHTML)}>
+            <Tooltip title={renderHTML ? 'Hide' : 'Show Web Page'} variant="solid">
+              <IconButton variant={renderHTML ? 'solid' : 'outlined'} color="danger" onClick={() => setShowHTML(!showHTML)}>
                 <HtmlIcon />
               </IconButton>
             </Tooltip>
           )}
           {isMermaid && (
-            <Tooltip title={renderMermaid ? 'Show Code' : 'Render Mermaid'} variant='solid'>
-              <IconButton variant={renderMermaid ? 'solid' : 'outlined'} color='neutral' onClick={() => setShowMermaid(!showMermaid)}>
+            <Tooltip title={renderMermaid ? 'Show Code' : 'Render Mermaid'} variant="solid">
+              <IconButton variant={renderMermaid ? 'solid' : 'outlined'} color="neutral" onClick={() => setShowMermaid(!showMermaid)}>
                 <SchemaIcon />
               </IconButton>
             </Tooltip>
           )}
           {isPlantUML && (
-            <Tooltip title={renderPlantUML ? 'Show Code' : 'Render PlantUML'} variant='solid'>
-              <IconButton variant={renderPlantUML ? 'solid' : 'outlined'} color='neutral' onClick={() => setShowPlantUML(!showPlantUML)}>
+            <Tooltip title={renderPlantUML ? 'Show Code' : 'Render PlantUML'} variant="solid">
+              <IconButton variant={renderPlantUML ? 'solid' : 'outlined'} color="neutral" onClick={() => setShowPlantUML(!showPlantUML)}>
                 <SchemaIcon />
               </IconButton>
             </Tooltip>
           )}
           {isSVG && (
-            <Tooltip title={renderSVG ? 'Show Code' : 'Render SVG'} variant='solid'>
-              <IconButton variant={renderSVG ? 'solid' : 'outlined'} color='neutral' onClick={() => setShowSVG(!showSVG)}>
+            <Tooltip title={renderSVG ? 'Show Code' : 'Render SVG'} variant="solid">
+              <IconButton variant={renderSVG ? 'solid' : 'outlined'} color="neutral" onClick={() => setShowSVG(!showSVG)}>
                 <ShapeLineOutlinedIcon />
               </IconButton>
             </Tooltip>
           )}
           {canCodepen && <OpenInCodepen codeBlock={{ code: blockCode, language: inferredCodeLanguage || undefined }} />}
           {canReplit && <OpenInReplit codeBlock={{ code: blockCode, language: inferredCodeLanguage || undefined }} />}
-          {props.noCopyButton !== true && <Tooltip title='Copy Code' variant='solid'>
-            <IconButton variant='outlined' color='neutral' onClick={handleCopyToClipboard}>
-              <ContentCopyIcon />
-            </IconButton>
-          </Tooltip>}
+          {props.noCopyButton !== true && (
+            <Tooltip title="Copy Code" variant="solid">
+              <IconButton variant="outlined" color="neutral" onClick={handleCopyToClipboard}>
+                <ContentCopyIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
-
       </Box>
     </Box>
   );
@@ -208,17 +211,18 @@ function RenderCodeImpl(props: {
 
 // Dynamically import the heavy prism functions
 const RenderCodeDynamic = React.lazy(async () => {
-
   // Dynamically import the code highlight functions
   const { highlightCode, inferCodeLanguage } = await import('./codePrism');
 
   return {
-    default: (props: { codeBlock: CodeBlock, noCopyButton?: boolean, sx?: SxProps }) =>
-      <RenderCodeImpl highlightCode={highlightCode} inferCodeLanguage={inferCodeLanguage} {...props} />,
+    default: (props: { codeBlock: CodeBlock; noCopyButton?: boolean; sx?: SxProps }) => (
+      <RenderCodeImpl highlightCode={highlightCode} inferCodeLanguage={inferCodeLanguage} {...props} />
+    ),
   };
 });
 
-export const RenderCode = (props: { codeBlock: CodeBlock, noCopyButton?: boolean, sx?: SxProps }) =>
-  <React.Suspense fallback={<Box component='code' sx={{ p: 1.5, display: 'block', ...(props.sx || {}) }} />}>
+export const RenderCode = (props: { codeBlock: CodeBlock; noCopyButton?: boolean; sx?: SxProps }) => (
+  <React.Suspense fallback={<Box component="code" sx={{ p: 1.5, display: 'block', ...(props.sx || {}) }} />}>
     <RenderCodeDynamic {...props} />
-  </React.Suspense>;
+  </React.Suspense>
+);

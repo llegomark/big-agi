@@ -3,7 +3,6 @@ import { keyframes } from '@emotion/react';
 
 import { Avatar, Box } from '@mui/joy';
 
-
 const cssScaleKeyframes = keyframes`
     0% {
         transform: scale(1);
@@ -15,11 +14,11 @@ const cssScaleKeyframes = keyframes`
         transform: scale(1);
     }`;
 
-
-export function CallAvatar(props: { symbol: string, imageUrl?: string, isRinging: boolean, onClick: () => void }) {
+export function CallAvatar(props: { symbol: string; imageUrl?: string; isRinging: boolean; onClick: () => void }) {
   return (
     <Avatar
-      variant='soft' color='neutral'
+      variant="soft"
+      color="neutral"
       onClick={props.onClick}
       src={props.imageUrl}
       sx={{
@@ -29,20 +28,16 @@ export function CallAvatar(props: { symbol: string, imageUrl?: string, isRinging
         fontSize: { xs: '100px', md: '120px' },
       }}
     >
-
       {/* As fallback, show the large Persona Symbol */}
       {!props.imageUrl && (
         <Box
           sx={{
-            ...(props.isRinging
-              ? { animation: `${cssScaleKeyframes} 1.4s ease-in-out infinite` }
-              : {}),
+            ...(props.isRinging ? { animation: `${cssScaleKeyframes} 1.4s ease-in-out infinite` } : {}),
           }}
         >
           {props.symbol}
         </Box>
       )}
-
     </Avatar>
   );
 }

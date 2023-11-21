@@ -26,28 +26,29 @@ export function useDebouncer<TValue = string | number>(
     }
   }, []);
 
-  const setValue = React.useCallback((_newValue: TValue | ((prevState: TValue) => TValue)) => {
-    clearDebounceTimeout();
-    // @ts-expect-error _newValue can be a function type (cannot, but lint doesn't know)
-    const newValue: TValue = typeof _newValue === 'function' ? _newValue(valueRef.current) : _newValue;
-    valueRef.current = newValue;
-    // trigger an immediate update
-    if (immediate)
-      setImmediateValue(newValue);
+  const setValue = React.useCallback(
+    (_newValue: TValue | ((prevState: TValue) => TValue)) => {
+      clearDebounceTimeout();
+      // @ts-expect-error _newValue can be a function type (cannot, but lint doesn't know)
+      const newValue: TValue = typeof _newValue === 'function' ? _newValue(valueRef.current) : _newValue;
+      valueRef.current = newValue;
+      // trigger an immediate update
+      if (immediate) setImmediateValue(newValue);
 
-    const handler = () => {
-      setDebouncedValue(valueRef.current);
-      clearDeadlineTimeout();
-    };
+      const handler = () => {
+        setDebouncedValue(valueRef.current);
+        clearDeadlineTimeout();
+      };
 
-    // Set the debounce timeout
-    debounceTimeoutRef.current = window.setTimeout(handler, delayMs);
+      // Set the debounce timeout
+      debounceTimeoutRef.current = window.setTimeout(handler, delayMs);
 
-    // Set the deadline timeout if it hasn't been set already
-    if (typeof deadlineMs === 'number' && deadlineMs > delayMs && deadlineTimeoutRef.current === undefined)
-      deadlineTimeoutRef.current = window.setTimeout(handler, deadlineMs);
-
-  }, [clearDebounceTimeout, immediate, delayMs, deadlineMs, clearDeadlineTimeout]);
+      // Set the deadline timeout if it hasn't been set already
+      if (typeof deadlineMs === 'number' && deadlineMs > delayMs && deadlineTimeoutRef.current === undefined)
+        deadlineTimeoutRef.current = window.setTimeout(handler, deadlineMs);
+    },
+    [clearDebounceTimeout, immediate, delayMs, deadlineMs, clearDeadlineTimeout],
+  );
 
   const getValue = React.useCallback(() => valueRef.current, []);
 
@@ -60,7 +61,6 @@ export function useDebouncer<TValue = string | number>(
 
   return [immediateValue, debouncedValue, setValue, getValue];
 }
-
 
 /*
 

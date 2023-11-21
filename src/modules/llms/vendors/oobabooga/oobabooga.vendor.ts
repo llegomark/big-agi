@@ -9,9 +9,8 @@ import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { OobaboogaSourceSetup } from './OobaboogaSourceSetup';
 
-
 export interface SourceSetupOobabooga {
-  oaiHost: string;  // use OpenAI-compatible non-default hosts (full origin path)
+  oaiHost: string; // use OpenAI-compatible non-default hosts (full origin path)
 }
 
 export const ModelVendorOoobabooga: IModelVendor<SourceSetupOobabooga, LLMOptionsOpenAI, OpenAIAccessSchema> = {
@@ -41,7 +40,13 @@ export const ModelVendorOoobabooga: IModelVendor<SourceSetupOobabooga, LLMOption
   callChatGenerate(llm, messages: VChatMessageIn[], maxTokens?: number): Promise<VChatMessageOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, null, null, maxTokens);
   },
-  callChatGenerateWF(llm, messages: VChatMessageIn[], functions: VChatFunctionIn[] | null, forceFunctionName: string | null, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut> {
+  callChatGenerateWF(
+    llm,
+    messages: VChatMessageIn[],
+    functions: VChatFunctionIn[] | null,
+    forceFunctionName: string | null,
+    maxTokens?: number,
+  ): Promise<VChatMessageOrFunctionCallOut> {
     return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, functions, forceFunctionName, maxTokens);
   },
 };

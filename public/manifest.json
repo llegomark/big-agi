@@ -1,9 +1,9 @@
 {
-  "name": "big-AGI",
-  "short_name": "big-AGI",
+  "name": "Chat",
+  "short_name": "Chat",
   "theme_color": "#32383E",
   "background_color": "#9FA6AD",
-  "description": "Personal AGI App",
+  "description": "Purr-sonalized AI just a click away",
   "display": "standalone",
   "start_url": "/",
   "icons": [

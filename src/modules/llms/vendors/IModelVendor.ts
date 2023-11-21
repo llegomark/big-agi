@@ -3,9 +3,7 @@ import type React from 'react';
 import type { DLLM, DModelSourceId } from '../store-llms';
 import { VChatFunctionIn, VChatMessageIn, VChatMessageOrFunctionCallOut, VChatMessageOut } from '../transports/chatGenerate';
 
-
 export type ModelVendorId = 'anthropic' | 'azure' | 'localai' | 'ollama' | 'oobabooga' | 'openai' | 'openrouter';
-
 
 export interface IModelVendor<TSourceSetup = unknown, TLLMOptions = unknown, TAccess = unknown, TDLLM = DLLM<TSourceSetup, TLLMOptions>> {
   readonly id: ModelVendorId;
@@ -27,5 +25,11 @@ export interface IModelVendor<TSourceSetup = unknown, TLLMOptions = unknown, TAc
 
   callChatGenerate(llm: TDLLM, messages: VChatMessageIn[], maxTokens?: number): Promise<VChatMessageOut>;
 
-  callChatGenerateWF(llm: TDLLM, messages: VChatMessageIn[], functions: null | VChatFunctionIn[], forceFunctionName: null | string, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut>;
+  callChatGenerateWF(
+    llm: TDLLM,
+    messages: VChatMessageIn[],
+    functions: null | VChatFunctionIn[],
+    forceFunctionName: null | string,
+    maxTokens?: number,
+  ): Promise<VChatMessageOrFunctionCallOut>;
 }

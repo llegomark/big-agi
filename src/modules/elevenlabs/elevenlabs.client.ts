@@ -8,13 +8,9 @@ import { useUIPreferencesStore } from '~/common/state/store-ui';
 import type { SpeechInputSchema } from './elevenlabs.router';
 import { getElevenLabsData, useElevenLabsData } from './store-module-elevenlabs';
 
-
 export const isValidElevenLabsApiKey = (apiKey?: string) => !!apiKey && apiKey.trim()?.length >= 32;
 
-export const isElevenLabsEnabled = (apiKey?: string) => apiKey
-  ? isValidElevenLabsApiKey(apiKey)
-  : backendCaps().hasVoiceElevenLabs;
-
+export const isElevenLabsEnabled = (apiKey?: string) => (apiKey ? isValidElevenLabsApiKey(apiKey) : backendCaps().hasVoiceElevenLabs);
 
 export function useCapability(): CapabilityElevenLabsSpeechSynthesis {
   const [clientApiKey, voiceId] = useElevenLabsData();
@@ -24,15 +20,14 @@ export function useCapability(): CapabilityElevenLabsSpeechSynthesis {
   return { mayWork, isConfiguredServerSide, isConfiguredClientSide };
 }
 
-
 export async function speakText(text: string, voiceId?: string) {
-  if (!(text?.trim())) return;
+  if (!text?.trim()) return;
 
   const { elevenLabsApiKey, elevenLabsVoiceId } = getElevenLabsData();
   if (!isElevenLabsEnabled(elevenLabsApiKey)) return;
 
   const { preferredLanguage } = useUIPreferencesStore.getState();
-  const nonEnglish = !(preferredLanguage?.toLowerCase()?.startsWith('en'));
+  const nonEnglish = !preferredLanguage?.toLowerCase()?.startsWith('en');
 
   try {
     const edgeResponse = await fetchApiElevenlabsSpeech(text, elevenLabsApiKey, voiceId || elevenLabsVoiceId, nonEnglish, false);
@@ -46,13 +41,13 @@ export async function speakText(text: string, voiceId?: string) {
 // let liveAudioPlayer: LiveAudioPlayer | undefined = undefined;
 
 export async function EXPERIMENTAL_speakTextStream(text: string, voiceId?: string) {
-  if (!(text?.trim())) return;
+  if (!text?.trim()) return;
 
   const { elevenLabsApiKey, elevenLabsVoiceId } = getElevenLabsData();
   if (!isElevenLabsEnabled(elevenLabsApiKey)) return;
 
   const { preferredLanguage } = useUIPreferencesStore.getState();
-  const nonEnglish = !(preferredLanguage?.toLowerCase()?.startsWith('en'));
+  const nonEnglish = !preferredLanguage?.toLowerCase()?.startsWith('en');
 
   const edgeResponse = await fetchApiElevenlabsSpeech(text, elevenLabsApiKey, voiceId || elevenLabsVoiceId, nonEnglish, true);
 
@@ -62,11 +57,16 @@ export async function EXPERIMENTAL_speakTextStream(text: string, voiceId?: strin
   void liveAudioPlayer.EXPERIMENTAL_playStream(edgeResponse);
 }
 
-
 /**
  * Note: we have to use this client-side API instead of TRPC because of ArrayBuffers..
  */
-async function fetchApiElevenlabsSpeech(text: string, elevenLabsApiKey: string, elevenLabsVoiceId: string, nonEnglish: boolean, streaming: boolean): Promise<Response> {
+async function fetchApiElevenlabsSpeech(
+  text: string,
+  elevenLabsApiKey: string,
+  elevenLabsVoiceId: string,
+  nonEnglish: boolean,
+  streaming: boolean,
+): Promise<Response> {
   // NOTE: hardcoded 1000 as a failsafe, since the API will take very long and consume lots of credits for longer texts
   const speechInput: SpeechInputSchema = {
     elevenKey: elevenLabsApiKey,

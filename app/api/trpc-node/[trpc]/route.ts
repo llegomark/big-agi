@@ -9,10 +9,7 @@ const handlerNodeRoutes = (req: Request) =>
     endpoint: '/api/trpc-node',
     req,
     createContext: createTRPCFetchContext,
-    onError:
-      process.env.NODE_ENV === 'development'
-        ? ({ path, error }) => console.error(`❌ tRPC-node failed on ${path ?? '<no-path>'}:`, error)
-        : undefined,
+    onError: process.env.NODE_ENV === 'development' ? ({ path, error }) => console.error(`❌ tRPC-node failed on ${path ?? '<no-path>'}:`, error) : undefined,
   });
 
 export const runtime = 'nodejs';

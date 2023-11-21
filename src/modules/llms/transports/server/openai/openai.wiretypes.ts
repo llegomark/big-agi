@@ -5,9 +5,7 @@
  *  - [FN0613]: function calling capability - only 2023-06-13 and later Chat models
  */
 export namespace OpenAIWire {
-
   export namespace ChatCompletion {
-
     export interface Request {
       model: string;
       messages: RequestMessage[];
@@ -19,10 +17,13 @@ export namespace OpenAIWire {
       stream: boolean;
       n: number;
       // [FN0613]
-      functions?: RequestFunctionDef[],
-      function_call?: 'auto' | 'none' | {
-        name: string;
-      },
+      functions?: RequestFunctionDef[];
+      function_call?:
+        | 'auto'
+        | 'none'
+        | {
+            name: string;
+          };
     }
 
     export interface RequestMessage {
@@ -31,7 +32,8 @@ export namespace OpenAIWire {
       //name?: string; // when role: 'function'
     }
 
-    export interface RequestFunctionDef { // [FN0613]
+    export interface RequestFunctionDef {
+      // [FN0613]
       name: string;
       description?: string;
       parameters?: {
@@ -41,12 +43,11 @@ export namespace OpenAIWire {
             type: 'string' | 'number' | 'integer' | 'boolean';
             description?: string;
             enum?: string[];
-          }
-        }
+          };
+        };
         required?: string[];
       };
     }
-
 
     export interface Response {
       id: string;
@@ -70,10 +71,12 @@ export namespace OpenAIWire {
       content: string;
     }
 
-    export interface ResponseFunctionCall { // [FN0613]
+    export interface ResponseFunctionCall {
+      // [FN0613]
       role: 'assistant';
       content: null;
-      function_call: { // if content is null and finish_reason is 'function_call'
+      function_call: {
+        // if content is null and finish_reason is 'function_call'
         name: string;
         arguments: string; // a JSON object, to deserialize
       };
@@ -101,7 +104,6 @@ export namespace OpenAIWire {
     }
   }
 
-
   export namespace Models {
     export interface ModelDescription {
       id: string;
@@ -122,7 +124,6 @@ export namespace OpenAIWire {
       data: ModelDescription[];
     }
   }
-
 
   export namespace Moderation {
     export interface Request {
@@ -149,9 +150,8 @@ export namespace OpenAIWire {
           categories: { [key in ModerationCategory]: boolean };
           category_scores: { [key in ModerationCategory]: number };
           flagged: boolean;
-        }
+        },
       ];
     }
   }
-
 }

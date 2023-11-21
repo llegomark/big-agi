@@ -8,45 +8,46 @@ import { useUIPreferencesStore } from '~/common/state/store-ui';
 
 import { ChatModeId, ChatModeItems } from './store-composer';
 
-
 function fixNewLineShortcut(shortcut: string, enterIsNewLine: boolean) {
-  if (shortcut === 'ENTER')
-    return enterIsNewLine ? 'Shift + Enter' : 'Enter';
+  if (shortcut === 'ENTER') return enterIsNewLine ? 'Shift + Enter' : 'Enter';
   return shortcut;
 }
 
-export const ChatModeMenu = (props: { anchorEl: HTMLAnchorElement | null, onClose: () => void, experimental: boolean, chatModeId: ChatModeId, onSetChatModeId: (chatMode: ChatModeId) => void }) => {
-
+export const ChatModeMenu = (props: {
+  anchorEl: HTMLAnchorElement | null;
+  onClose: () => void;
+  experimental: boolean;
+  chatModeId: ChatModeId;
+  onSetChatModeId: (chatMode: ChatModeId) => void;
+}) => {
   // external state
-  const enterIsNewline = useUIPreferencesStore(state => state.enterIsNewline);
+  const enterIsNewline = useUIPreferencesStore((state) => state.enterIsNewline);
 
-  return <CloseableMenu
-    placement='top-end' sx={{ minWidth: 320 }}
-    open anchorEl={props.anchorEl} onClose={props.onClose}
-  >
+  return (
+    <CloseableMenu placement="top-end" sx={{ minWidth: 320 }} open anchorEl={props.anchorEl} onClose={props.onClose}>
+      {/*<MenuItem color='neutral' selected>*/}
+      {/*  Conversation Mode*/}
+      {/*</MenuItem>*/}
+      {/**/}
+      {/*<ListDivider />*/}
 
-    {/*<MenuItem color='neutral' selected>*/}
-    {/*  Conversation Mode*/}
-    {/*</MenuItem>*/}
-    {/**/}
-    {/*<ListDivider />*/}
-
-    {/* ChatMode items */}
-    {Object.entries(ChatModeItems)
-      .filter(([, { experimental }]) => props.experimental || !experimental)
-      .map(([key, data]) =>
-        <MenuItem key={'chat-mode-' + key} onClick={() => props.onSetChatModeId(key as ChatModeId)}>
-          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Radio checked={key === props.chatModeId} />
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography>{data.label}</Typography>
-              <Typography level='body-xs'>{data.description}</Typography>
+      {/* ChatMode items */}
+      {Object.entries(ChatModeItems)
+        .filter(([, { experimental }]) => props.experimental || !experimental)
+        .map(([key, data]) => (
+          <MenuItem key={'chat-mode-' + key} onClick={() => props.onSetChatModeId(key as ChatModeId)}>
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <Radio checked={key === props.chatModeId} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography>{data.label}</Typography>
+                <Typography level="body-xs">{data.description}</Typography>
+              </Box>
+              {(key === props.chatModeId || !!data.shortcut) && (
+                <KeyStroke combo={fixNewLineShortcut(key === props.chatModeId ? 'ENTER' : data.shortcut ? data.shortcut : 'ENTER', enterIsNewline)} />
+              )}
             </Box>
-            {(key === props.chatModeId || !!data.shortcut) && (
-              <KeyStroke combo={fixNewLineShortcut((key === props.chatModeId) ? 'ENTER' : data.shortcut ? data.shortcut : "ENTER", enterIsNewline)} />
-            )}
-          </Box>
-        </MenuItem>)}
-
-  </CloseableMenu>;
+          </MenuItem>
+        ))}
+    </CloseableMenu>
+  );
 };

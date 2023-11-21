@@ -1,9 +1,7 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist } from 'zustand/middleware';
 
-
 interface GoogleSearchStore {
-
   // Google Custom Search settings
 
   googleCloudApiKey: string;
@@ -11,13 +9,11 @@ interface GoogleSearchStore {
 
   googleCSEId: string;
   setGoogleCSEId: (cseId: string) => void;
-
 }
 
-export const useGoogleSearchStore = create<GoogleSearchStore>()(
+export const useGoogleSearchStore = createWithEqualityFn<GoogleSearchStore>()(
   persist(
     (set) => ({
-
       // Google Custom Search settings
 
       googleCloudApiKey: '',
@@ -25,9 +21,9 @@ export const useGoogleSearchStore = create<GoogleSearchStore>()(
 
       googleCSEId: '',
       setGoogleCSEId: (cseId: string) => set({ googleCSEId: cseId }),
-
     }),
     {
       name: 'app-module-google-search',
-    }),
+    },
+  ),
 );

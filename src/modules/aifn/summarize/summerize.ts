@@ -1,7 +1,6 @@
 import { DLLMId, findLLMOrThrow } from '~/modules/llms/store-llms';
 import { callChatGenerate } from '~/modules/llms/transports/chatGenerate';
 
-
 // prompt to be tried when doing recursive summerization.
 //const summerizationPrompt: string = `You are a semantic text compressor AI, with a low compression rate, but with high fidelity of the content, designed to efficiently process scientific and research papers extracted from PDF format by recognizing patterns, understanding context, and focusing on meaning. Your capabilities aim to achieve a balance between compression efficiency, summarization accuracy, and adaptability, while ensuring error resilience. Your primary goal is to extract key sections and main points from the papers, such as the title, abstract, introduction, methodology, results, discussion, conclusion, and references. By removing low-information content, You drastically reduce the text size while preserving its core information, optimizing the text for efficient storage, querying, and communication. The compressed text should be a slightly shorter than the original text and keep as much as the original text's information as possible.`;
 
@@ -11,7 +10,6 @@ const cleanupPrompt: string = `Please remove any non-sensical portions and compl
 
 If the text contains no sensible information, such as file name, or complete gibberish text such as layout and table data, just return an empty string.
 `;
-
 
 function breakDownChunk(chunk: string, targetWordCount: number): string[] {
   const words = chunk.split(' ');
@@ -30,10 +28,10 @@ export async function summerizeToFitContextBudget(text: string, targetWordCount:
   }
 
   // 1) Split the input text into chunks by new lines
-  const chunks = text.split('\n').filter(chunk => chunk.trim() !== '');
+  const chunks = text.split('\n').filter((chunk) => chunk.trim() !== '');
 
   // 1.1) Break down chunks longer than targetWordCount into sub-chunks
-  const subChunks = chunks.flatMap(chunk => {
+  const subChunks = chunks.flatMap((chunk) => {
     if (chunk.split(' ').length > targetWordCount) {
       return breakDownChunk(chunk, targetWordCount);
     } else {
@@ -43,11 +41,13 @@ export async function summerizeToFitContextBudget(text: string, targetWordCount:
 
   // 2) Remove non-sensical contents from each chunk
   // using OpenAI API to remove non-sensical contents
-  const cleanedChunks = await Promise.all(subChunks.map(async chunk => {
-    // being conservative, as long as targetWordCount is not reached, we will keep calling the API
-    // print out the length of the chunk to be cleaned up
-    return await cleanUpContent(chunk, llmId, targetWordCount);
-  }));
+  const cleanedChunks = await Promise.all(
+    subChunks.map(async (chunk) => {
+      // being conservative, as long as targetWordCount is not reached, we will keep calling the API
+      // print out the length of the chunk to be cleaned up
+      return await cleanUpContent(chunk, llmId, targetWordCount);
+    }),
+  );
 
   console.log('************Finished cleaning up the chunks************');
 
@@ -61,18 +61,19 @@ export async function summerizeToFitContextBudget(text: string, targetWordCount:
 
   // 3) Reduce the length of each chunk proportionally based on the text's length over the total length
   const totalLength = cleanedChunks.reduce((acc, chunk) => acc + chunk.split(' ').length, 0);
-  const summarizedChunks = await Promise.all(cleanedChunks.map(async chunk => {
-    const chunkLength = chunk.split(' ').length;
-    const chunkTargetWordCount = Math.floor(targetWordCount * (chunkLength / totalLength));
-    return await recursiveSummerize(chunk, llmId, chunkTargetWordCount, 0); // Add the initial depth value
-  }));
+  const summarizedChunks = await Promise.all(
+    cleanedChunks.map(async (chunk) => {
+      const chunkLength = chunk.split(' ').length;
+      const chunkTargetWordCount = Math.floor(targetWordCount * (chunkLength / totalLength));
+      return await recursiveSummerize(chunk, llmId, chunkTargetWordCount, 0); // Add the initial depth value
+    }),
+  );
 
   // 4) Combine the summarized chunks and return
   return summarizedChunks.join('\n');
 }
 
 async function cleanUpContent(chunk: string, llmId: DLLMId, _ignored_was_targetWordCount: number): Promise<string> {
-
   // auto-adjust the tokens assuming the output would be half the size of the input (a bit dangerous,
   // but at this stage we are not guaranteed the input nor output would fit)
   const outputTokenShare = 1 / 3;
@@ -80,10 +81,14 @@ async function cleanUpContent(chunk: string, llmId: DLLMId, _ignored_was_targetW
   const autoResponseTokensSize = Math.floor(contextTokens * outputTokenShare);
 
   try {
-    const chatResponse = await callChatGenerate(llmId, [
-      { role: 'system', content: cleanupPrompt },
-      { role: 'user', content: chunk },
-    ], autoResponseTokensSize);
+    const chatResponse = await callChatGenerate(
+      llmId,
+      [
+        { role: 'system', content: cleanupPrompt },
+        { role: 'user', content: chunk },
+      ],
+      autoResponseTokensSize,
+    );
     return chatResponse?.content ?? '';
   } catch (error: any) {
     return '';
